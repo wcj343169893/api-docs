@@ -1,0 +1,2895 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Worky API 說明文件</title>
+<style>
+  :root {
+    --primary: #E6950A;
+    --primary-dark: #B87200;
+    --primary-light: #FFF8E1;
+    --sidebar-bg: #FFFDE7;
+    --sidebar-width: 260px;
+    --code-bg: #2b2416;
+    --code-panel-width: 340px;
+    --text: #333;
+    --muted: #888;
+    --border: #FFE082;
+    --tag-get: #2196F3;
+    --tag-post: #43A047;
+    --tag-delete: #e53935;
+    --tag-put: #FB8C00;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #FFF9EF; color: var(--text); display: flex; flex-direction: column; height: 100vh; }
+ 
+  /* ── Header ── */
+  header {
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 54px;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    z-index: 100;
+  }
+  header .logo { display: flex; align-items: center; gap: 10px; }
+  /* logo rendered as inline SVG */
+  header nav { margin-left: auto; display: flex; gap: 24px; }
+  header nav a { font-size: 13px; color: var(--muted); text-decoration: none; }
+  header nav a:hover { color: var(--primary-dark); }
+ 
+  /* ── Layout ── */
+  .app-body { display: flex; flex: 1; overflow: hidden; }
+ 
+  /* ── Sidebar ── */
+  aside {
+    width: var(--sidebar-width);
+    background: #fff;
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+  .sidebar-home {
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-home-btn {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 12px; border-radius: 8px;
+    background: var(--primary-light); color: var(--primary);
+    font-weight: 600; font-size: 13px; cursor: pointer;
+    border: none; width: 100%; text-align: left;
+  }
+  .sidebar-home-btn:hover { background: #FFE082; }
+  .module-group { border-bottom: 1px solid var(--border); }
+  .module-header {
+    padding: 12px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer; user-select: none;
+    background: var(--sidebar-bg);
+  }
+  .module-header:hover { background: #FFF9C4; }
+  .module-header .module-title { font-size: 13px; font-weight: 700; color: var(--primary-dark); }
+  .module-header .module-desc { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .module-header .arrow {
+    display: inline-block;
+    width: 0; height: 0;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-left: 7px solid var(--muted);
+    transition: transform .2s;
+    flex-shrink: 0;
+  }
+  .module-header.open .arrow { transform: rotate(90deg); }
+  .api-list { display: none; }
+  .api-list.open { display: block; }
+  .api-item {
+    padding: 9px 16px 9px 24px;
+    display: flex; align-items: center; gap: 8px;
+    cursor: pointer; font-size: 12.5px; color: var(--text);
+    border-left: 3px solid transparent;
+  }
+  .api-item:hover { background: #FFF8E1; }
+  .api-item.active { background: var(--primary-light); border-left-color: var(--primary); color: var(--primary); font-weight: 600; }
+  .method-tag {
+    font-size: 10px; font-weight: 700; padding: 2px 5px; border-radius: 3px;
+    color: #fff; flex-shrink: 0;
+  }
+  .tag-post { background: var(--tag-post); }
+  .tag-get { background: var(--tag-get); }
+  .tag-delete { background: var(--tag-delete); }
+  .tag-put { background: var(--tag-put); }
+ 
+  /* ── Main Content ── */
+  main {
+    flex: 1;
+    overflow-y: auto;
+    background: #f0f5f5;
+  }
+  .content-wrap {
+    max-width: 860px;
+    padding: 32px 36px;
+  }
+ 
+  /* ── Home Page ── */
+  .home-intro {
+    background: #fff;
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    border: 1px solid var(--border);
+  }
+  .home-intro h2 { font-size: 20px; color: var(--primary); margin-bottom: 12px; }
+  .home-intro p { font-size: 14px; line-height: 1.8; color: #555; }
+ 
+  .home-flow {
+    background: #fff;
+    border-radius: 12px;
+    padding: 28px 32px;
+    border: 1px solid var(--border);
+  }
+  .home-flow h2 { font-size: 18px; color: var(--primary); margin-bottom: 24px; font-weight: 700; }
+ 
+  /* Flow diagram */
+  .flow-diagram { overflow-x: auto; }
+  .flow-diagram svg { min-width: 640px; }
+ 
+  /* Quick Cards */
+  .module-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+    margin-top: 28px;
+  }
+  .module-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    cursor: pointer;
+    transition: box-shadow .15s, border-color .15s;
+    display: flex; align-items: flex-start; justify-content: space-between;
+  }
+  .module-card:hover { box-shadow: 0 4px 16px rgba(230,149,10,.18); border-color: var(--primary); }
+  .module-card h4 { font-size: 14px; font-weight: 700; color: var(--primary-dark); margin-bottom: 4px; }
+  .module-card p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .module-card .card-arrow { color: var(--primary); font-size: 16px; flex-shrink: 0; margin-top: 2px; }
+ 
+  /* ── API Page ── */
+  .api-page { display: none; }
+  .api-page.active { display: block; }
+ 
+  .api-header {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border);
+  }
+  .api-header .breadcrumb { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  .api-header .breadcrumb span { color: var(--primary); }
+  .api-header h1 { font-size: 22px; font-weight: 700; margin-bottom: 10px; }
+  .api-header .endpoint {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--primary-light); padding: 8px 14px; border-radius: 6px;
+    font-size: 13px;
+  }
+  .api-header .endpoint .method { font-weight: 700; color: var(--primary); font-size: 13px; }
+  .api-header .endpoint .url { font-family: monospace; color: var(--text); }
+  .api-header .desc { margin-top: 14px; font-size: 14px; line-height: 1.7; color: #555; }
+ 
+  /* Tabs */
+  .tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 20px; }
+  .tab-btn {
+    padding: 10px 20px; font-size: 13px; font-weight: 600;
+    color: var(--muted); border: none; background: none;
+    cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px;
+    transition: color .15s;
+  }
+  .tab-btn:hover { color: var(--primary); }
+  .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+ 
+  /* Section card */
+  .section-card {
+    background: #fff;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .section-card h3 {
+    font-size: 13px; font-weight: 700;
+    padding: 12px 18px;
+    background: var(--sidebar-bg);
+    border-bottom: 1px solid var(--border);
+    color: var(--primary-dark);
+    text-transform: uppercase; letter-spacing: .04em;
+  }
+ 
+  /* Param table */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: var(--sidebar-bg); padding: 10px 16px; text-align: left; font-weight: 600; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+  td { padding: 10px 16px; border-top: 1px solid var(--border); vertical-align: top; }
+  tr:first-child td { border-top: none; }
+  .param-name { font-family: monospace; color: var(--primary-dark); font-weight: 600; }
+  .required { color: #e53935; font-size: 11px; font-weight: 700; }
+  .optional { color: var(--muted); font-size: 11px; }
+  .type-badge { font-size: 11px; background: #eee; padding: 2px 6px; border-radius: 3px; font-family: monospace; }
+ 
+  /* Code block */
+  .code-block {
+    background: var(--code-bg);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 0;
+  }
+  .code-block-header {
+    background: #3a2e10;
+    padding: 8px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .code-block-header .lang { font-size: 11px; color: #FFD54F; font-weight: 600; text-transform: uppercase; }
+  .code-block-header .copy-btn {
+    font-size: 11px; color: #FFCC80; background: none; border: 1px solid #5D4E20;
+    border-radius: 4px; padding: 2px 8px; cursor: pointer;
+  }
+  .code-block-header .copy-btn:hover { color: #fff; border-color: var(--primary); }
+  .code-block pre {
+    padding: 16px;
+    overflow-x: auto;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: #FFF8E1;
+    font-family: "Fira Code", "Cascadia Code", monospace;
+  }
+  .code-block pre .k { color: #FFD54F; }
+  .code-block pre .s { color: #A5D6A7; }
+  .code-block pre .n { color: #FFCC80; }
+  .code-block pre .c { color: #8D7B4A; font-style: italic; }
+ 
+  /* Error table */
+  .error-code { font-family: monospace; font-weight: 700; color: #e53935; }
+ 
+  /* Notice box */
+  .notice {
+    background: #fff8e1; border: 1px solid #ffe082;
+    border-radius: 8px; padding: 12px 16px;
+    font-size: 13px; color: #5d4037; line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  .notice::before { content: "⚠️ "; }
+ 
+  /* Footer */
+  footer {
+    background: #fff;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    padding: 14px;
+    font-size: 12px;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+ 
+  /* ── Changelog Page ── */
+  .changelog-page, .contact-page { display: none; }
+  .changelog-page.active, .contact-page.active { display: block; }
+  .changelog-wrap { max-width: 860px; padding: 32px 36px; }
+ 
+  .changelog-header-card {
+    background: linear-gradient(135deg, #fff8e1 0%, #fff3cd 100%);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin-bottom: 28px;
+    display: flex; align-items: center; gap: 18px;
+  }
+  .changelog-header-icon { font-size: 38px; flex-shrink: 0; }
+  .changelog-header-card h1 { font-size: 22px; font-weight: 700; color: var(--primary-dark); margin-bottom: 6px; }
+  .changelog-header-card p { font-size: 13px; color: #777; line-height: 1.6; }
+ 
+  .changelog-timeline { position: relative; padding-left: 28px; }
+  .changelog-timeline::before {
+    content: '';
+    position: absolute; left: 8px; top: 0; bottom: 0;
+    width: 2px; background: var(--border);
+  }
+  .changelog-entry {
+    position: relative;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+  }
+  .changelog-entry::before {
+    content: '';
+    position: absolute; left: -24px; top: 22px;
+    width: 12px; height: 12px; border-radius: 50%;
+    background: var(--primary); border: 2px solid #fff;
+    box-shadow: 0 0 0 2px var(--primary);
+  }
+  .changelog-entry.minor::before { background: #90a4ae; box-shadow: 0 0 0 2px #90a4ae; }
+  .changelog-entry-meta {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap;
+  }
+  .version-badge {
+    font-size: 12px; font-weight: 700; padding: 3px 10px;
+    border-radius: 20px; background: var(--primary); color: #fff;
+  }
+  .version-badge.minor { background: #607d8b; }
+  .changelog-date { font-size: 12px; color: var(--muted); }
+  .changelog-type-tag {
+    font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px;
+  }
+  .type-new { background: #e8f5e9; color: #2e7d32; }
+  .type-fix { background: #fff3e0; color: #e65100; }
+  .type-improve { background: #e3f2fd; color: #1565c0; }
+  .type-deprecate { background: #fce4ec; color: #c62828; }
+  .changelog-entry h3 { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+  .changelog-entry p { font-size: 13px; color: #555; line-height: 1.7; }
+  .changelog-entry ul { margin: 8px 0 0 16px; }
+  .changelog-entry ul li { font-size: 13px; color: #555; line-height: 1.8; }
+  .changelog-entry ul li::marker { color: var(--primary); }
+ 
+  /* ── Contact Page ── */
+  .contact-wrap { max-width: 860px; padding: 32px 36px; }
+  .contact-header-card {
+    background: linear-gradient(135deg, #fff8e1 0%, #fff3cd 100%);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin-bottom: 28px;
+    display: flex; align-items: center; gap: 18px;
+  }
+  .contact-header-icon { font-size: 38px; flex-shrink: 0; }
+  .contact-header-card h1 { font-size: 22px; font-weight: 700; color: var(--primary-dark); margin-bottom: 6px; }
+  .contact-header-card p { font-size: 13px; color: #777; line-height: 1.6; }
+ 
+  .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  @media (max-width: 620px) { .contact-grid { grid-template-columns: 1fr; } }
+  .contact-card {
+    background: #fff; border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px 22px;
+    display: flex; gap: 14px; align-items: flex-start;
+    transition: box-shadow .15s, border-color .15s;
+  }
+  .contact-card:hover { box-shadow: 0 4px 16px rgba(230,149,10,.15); border-color: var(--primary); }
+  .contact-card-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: var(--primary-light); display: flex; align-items: center;
+    justify-content: center; font-size: 20px; flex-shrink: 0;
+  }
+  .contact-card h4 { font-size: 14px; font-weight: 700; color: var(--primary-dark); margin-bottom: 4px; }
+  .contact-card p { font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: 8px; }
+  .contact-card a, .contact-card span.contact-val {
+    font-size: 13px; color: var(--primary); font-weight: 600;
+    text-decoration: none; display: inline-block;
+  }
+  .contact-card a:hover { text-decoration: underline; }
+ 
+  .contact-faq {
+    background: #fff; border: 1px solid var(--border);
+    border-radius: 10px; padding: 22px 24px; margin-bottom: 20px;
+  }
+  .contact-faq h3 { font-size: 16px; font-weight: 700; color: var(--primary-dark); margin-bottom: 16px; }
+  .faq-item { border-bottom: 1px solid #f5e6b8; padding: 12px 0; }
+  .faq-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .faq-q {
+    font-size: 13.5px; font-weight: 600; color: var(--text);
+    cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+    user-select: none; gap: 10px;
+  }
+  .faq-q .faq-arrow {
+    display: inline-block;
+    width: 0; height: 0;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+    border-left: 6px solid var(--primary);
+    flex-shrink: 0;
+    transition: transform .2s;
+  }
+  .faq-q.open .faq-arrow { transform: rotate(90deg); }
+  .faq-a { font-size: 13px; color: #555; line-height: 1.8; padding-top: 8px; display: none; }
+  .faq-a.open { display: block; }
+ 
+  .contact-sla {
+    background: #fff; border: 1px solid var(--border);
+    border-radius: 10px; padding: 22px 24px;
+  }
+  .contact-sla h3 { font-size: 16px; font-weight: 700; color: var(--primary-dark); margin-bottom: 16px; }
+  .sla-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .sla-table th {
+    background: var(--primary-light); color: var(--primary-dark);
+    font-weight: 700; padding: 10px 14px; text-align: left;
+    border-bottom: 2px solid var(--border);
+  }
+  .sla-table td { padding: 10px 14px; border-bottom: 1px solid #f5e6b8; color: #444; }
+  .sla-table tr:last-child td { border-bottom: none; }
+  .sla-badge {
+    display: inline-block; padding: 2px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 700;
+  }
+  .sla-p1 { background: #fce4ec; color: #c62828; }
+  .sla-p2 { background: #fff3e0; color: #e65100; }
+  .sla-p3 { background: #e8f5e9; color: #2e7d32; }
+</style>
+</head>
+<body>
+ 
+<!-- Header -->
+<header>
+  <div class="logo">
+    <svg width="143" height="50" viewBox="0 0 223 78" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+<defs>
+<clipPath id="clip0_184_8105">
+<rect width="223" height="78" fill="white"/>
+</clipPath>
+</defs>
+<g clip-path="url(#clip0_184_8105)">
+<path d="M76.4119 17.7442L81.8584 15.6268L88.6617 32.3743L95.809 15.2148L102.259 32.6617L109.702 15.4448L114.91 17.5047L101.896 45.711L95.3313 28.9635L88.3559 45.826L76.4023 17.7442H76.4119Z" fill="#3F3F3F"/>
+<path d="M143.509 30.6784C143.509 38.6689 137.117 45.0211 129.1 45.0211C121.599 45.0211 115.388 38.5635 115.388 30.8029C115.388 23.0424 121.724 16.1729 129.454 16.1729C137.184 16.1729 143.519 22.6879 143.519 30.688L143.509 30.6784ZM121.131 30.7934C121.131 35.488 124.762 39.3108 129.282 39.3108C134.088 39.3108 137.719 35.6126 137.719 30.7934C137.719 25.9742 134.088 22.0939 129.454 22.0939C124.819 22.0939 121.131 26.0891 121.131 30.7934Z" fill="#3F3F3F"/>
+<path d="M149.376 28.3304L149.433 27.6214V26.8549C149.433 24.1531 149.137 20.7998 148.612 17.2165L154.526 16.2776V20.3303C156.925 17.2165 158.683 16.1626 161.559 16.1626C162.61 16.1626 163.26 16.3446 164.55 16.8716L162.849 22.8022C162.027 22.3902 161.215 22.2178 160.269 22.2178C158.396 22.2178 156.925 23.2142 156.046 25.092C155.463 26.3855 154.994 29.8538 155.052 32.4406L155.233 44.2539H149.022L149.366 28.3304H149.376Z" fill="#3F3F3F"/>
+<path d="M170.186 43.7848L170.367 39.3201L170.482 35.0279V34.3764L170.596 15.0516C170.539 12.0528 170.539 11.6504 170.252 6.35211L170.195 5.88265L176.635 4.88623L176.578 5.29821L176.521 7.30063L176.463 10.9414V11.3534L176.349 26.8074L187.834 15.9426L191.991 19.7654L181.68 28.9919L193.806 40.9776L189.65 44.8579L176.291 31.5787V44.2735H170.195V43.804L170.186 43.7848Z" fill="#3F3F3F"/>
+<path d="M203.01 15.7513L210.864 33.4377L217.84 15.8663L223 18.3956L212.508 43.0761L212.326 43.4881C209.689 49.8403 208.046 52.7146 205.179 55.9433L200.956 52.178C202.828 50.4726 204.348 48.3552 205.819 45.4235C206.698 43.718 207.816 41.0162 207.816 40.6617C207.816 40.5468 207.702 40.2497 207.472 39.7228L197.563 18.7405L203.01 15.7417V15.7513Z" fill="#3F3F3F"/>
+<path d="M57.2752 51.5933C56.5204 59.3635 52.8512 66.3097 46.9651 71.148C41.1078 75.9672 33.6643 78.2092 26.001 77.4619H25.8767C9.85262 75.8235 -1.44167 62.0174 0.154058 45.9981C1.73067 30.1224 15.4998 18.769 31.5048 20.1295C47.5002 21.9116 58.8041 35.7177 57.2752 51.5933Z" fill="#FFD54E"/>
+<path d="M56.0702 24.0284C55.1816 22.8404 54.1687 21.7578 53.2801 20.8284C52.2768 19.7649 50.7193 19.7266 49.6587 20.7134C48.6171 21.6715 48.5407 23.2236 49.5058 24.3925C49.6204 24.5171 49.7351 24.6512 49.8593 24.7758L50.0027 24.9195C53.7005 28.9147 55.9556 33.4465 56.7582 38.4669C56.4047 38.4094 56.0129 38.3807 55.4969 38.4382C55.258 38.4669 55.0096 38.4765 54.7707 38.5244C53.7387 38.6969 53.2132 39.2813 53.2705 40.2011C53.3374 41.1017 53.9681 41.667 54.9905 41.667C55.258 41.667 55.5447 41.619 55.8218 41.5903C56.3091 41.5328 56.72 41.437 57.0544 41.3029C57.0926 42.1173 57.1117 42.9508 57.0831 43.8035C56.7582 52.915 51.7608 61.0205 43.7153 65.4373C41.0398 66.9127 38.1924 67.8804 35.3067 68.3403C35.4214 67.9379 35.4596 67.4493 35.3736 66.8169C35.3449 66.5007 35.3449 66.1846 35.278 65.8876C35.0774 65.0157 34.5232 64.5558 33.6154 64.642C32.7172 64.7283 32.2586 65.284 32.2108 66.175C32.2013 66.4912 32.2395 66.8073 32.2681 67.1235C32.335 67.7846 32.4688 68.2828 32.6503 68.6565C27.7103 68.9247 22.7416 67.7654 18.3079 65.1498C18.2124 65.0924 18.1073 65.0253 17.9831 64.9391C17.6104 64.6804 17.1422 64.3642 16.5402 64.2492C15.7949 64.1055 14.6961 64.2492 14.0654 64.8912C13.4252 65.5331 13.2532 66.6828 13.4252 67.4301C13.5686 68.0624 14.0559 68.6181 14.8967 69.1547C20.8974 72.9008 27.5096 74.3763 35.1252 73.6865L36.0138 73.5332C36.8164 73.3894 37.8197 73.2074 38.8326 72.9487C48.9516 70.4194 57.0735 63.0133 60.5516 53.1258C64.0297 43.2478 62.3671 32.3639 56.0893 24.038L56.0702 24.0284Z" fill="#3F3F3F"/>
+<path d="M13.1395 61.0884C13.0248 60.9638 12.9102 60.8297 12.7859 60.7051L12.6426 60.5614C8.87785 56.4991 6.61326 51.8619 5.83928 46.7361C5.90617 46.7361 5.98261 46.7745 6.06861 46.7745C6.79481 46.7745 7.54011 46.6882 8.2472 46.5062C9.0594 46.2762 9.40338 45.6343 9.26005 44.7816C9.13584 43.996 8.62941 43.5457 7.82677 43.5074C7.48278 43.4978 7.12924 43.5361 6.78525 43.5648V43.5936C6.46993 43.6223 6.1546 43.6511 5.83928 43.6894C5.74373 43.699 5.65773 43.7469 5.57174 43.7756C5.54307 43.0858 5.53351 42.3864 5.56218 41.6774C5.88706 32.5659 10.8844 24.4604 18.9299 20.0436C21.5385 18.6065 24.3 17.658 27.1092 17.1694C27.1092 17.2652 27.0806 17.3418 27.0806 17.4376C27.1188 18.07 27.1666 18.7023 27.3099 19.3155C27.4914 20.149 28.0648 20.561 28.9152 20.4939C29.8134 20.4269 30.3007 19.8903 30.358 18.9897C30.3676 18.6448 30.3293 18.2903 30.3198 17.9454H30.2911C30.2625 17.6771 30.2529 17.3897 30.2051 17.1119C30.1765 16.9969 30.1382 16.9107 30.0905 16.8244C35.0018 16.5658 39.9228 17.7442 44.3469 20.3406C44.4424 20.3981 44.5475 20.4652 44.6717 20.5514C45.0444 20.8101 45.5126 21.1263 46.1146 21.2413C46.8599 21.385 47.9587 21.2413 48.5894 20.5993C49.2296 19.9574 49.4016 18.8077 49.2296 18.0604C49.0863 17.428 48.5989 16.8723 47.7581 16.3358C42.7225 13.1933 37.2378 11.6699 31.0938 11.6603L30.8262 9.07346L33.2724 8.81477C34.8585 8.64232 36.0338 7.20518 35.8618 5.61474L35.7185 4.2255C35.5465 2.63507 34.1132 1.45661 32.527 1.62907L21.6054 2.77878C20.0192 2.95124 18.844 4.38838 19.0159 5.97882L19.1593 7.36805C19.3313 8.95849 20.7646 10.1369 22.3507 9.96449L24.7969 9.7058L25.0644 12.2639C24.6631 12.3501 24.2331 12.4364 23.8222 12.5322C18.8822 13.7681 14.4199 16.1825 10.7316 19.4688L10.0054 18.7119L10.378 18.3574C11.8113 16.9777 11.8686 14.6783 10.4927 13.2316C9.11673 11.7944 6.82347 11.737 5.38063 13.1166L2.33251 16.0292C0.899228 17.4089 0.841896 19.7083 2.21785 21.155C3.5938 22.5922 5.88706 22.6497 7.3299 21.27L7.70255 20.9155L8.47653 21.7203C5.71506 24.767 3.52692 28.3503 2.10319 32.3743C-1.37492 42.2523 0.287693 53.1362 6.56548 61.462C7.45412 62.6501 8.46697 63.7327 9.35561 64.6621C9.93848 65.2752 10.7316 65.5531 11.4864 65.4764C12.012 65.419 12.5471 65.189 12.977 64.7866C14.0186 63.8285 14.095 62.2764 13.1299 61.1075L13.1395 61.0884Z" fill="#3F3F3F"/>
+<path d="M24.5588 37.7101C26.2023 37.3843 27.2821 35.7747 26.9667 34.1172C26.6514 32.4693 25.0366 31.3866 23.3835 31.7028C21.74 32.0286 20.6603 33.6382 20.9756 35.2957C21.3005 36.9436 22.9058 38.0262 24.5588 37.7101Z" fill="#3F3F3F"/>
+<path d="M37.5442 36.3019C39.1877 35.9761 40.2674 34.3665 39.9521 32.709C39.6272 31.0611 38.0219 29.9784 36.3689 30.2946C34.7254 30.6204 33.6456 32.23 33.961 33.8875C34.2858 35.5354 35.8911 36.618 37.5442 36.3019Z" fill="#3F3F3F"/>
+<path d="M19.2936 46.6591C18.0037 47.8089 17.9655 49.7442 19.0261 51.0376C22.6953 55.5311 28.6482 56.8533 34.1711 56.0197C39.2258 55.2437 44.3092 52.8197 46.3445 47.8376C46.9751 46.2855 45.9623 44.4172 44.443 43.8903C42.7995 43.3154 41.1369 44.2447 40.5063 45.7969C40.3629 46.1514 39.8947 46.8699 39.5889 47.1765C39.2927 47.4639 38.9774 47.7226 38.643 47.9813C38.6143 47.9909 38.6143 48.0101 38.6048 48.0292C38.5952 48.0292 38.5761 48.0388 38.5379 48.0675C38.3563 48.1825 38.1843 48.2783 37.9932 48.3837C37.5823 48.6137 37.1524 48.8149 36.7033 48.9969C36.5217 49.0831 36.3211 49.1502 36.13 49.2268C36.0917 49.2364 36.044 49.2556 36.0057 49.2747C35.0215 49.5622 34.0278 49.8017 33.0149 49.9454C29.4031 50.4915 25.8963 49.6292 23.7082 46.9466C22.6475 45.6531 20.5549 45.5957 19.3414 46.6783H19.3127L19.2936 46.6591ZM36.1013 49.1981C36.2255 49.1598 36.3019 49.131 36.1013 49.1981V49.1981Z" fill="#3F3F3F"/>
+<path d="M59.8838 15.8084C58.9665 16.3066 57.8772 16.0958 57.4473 15.3102L57.1893 14.8407C56.7593 14.0551 57.151 13.0012 58.0492 12.503L62.3204 10.1173C63.2377 9.61912 64.327 9.8299 64.757 10.6155L65.015 11.085C65.445 11.8706 65.0532 12.9245 64.155 13.4228L59.8838 15.8084Z" fill="#FFD54E"/>
+<path d="M55.3741 10.5966C54.7434 11.4397 53.6542 11.6888 52.9375 11.1427L52.5075 10.8169C51.7909 10.29 51.724 9.16903 52.3355 8.31632L55.2594 4.39772C55.8901 3.56417 56.9794 3.30549 57.696 3.8516L58.126 4.17735C58.8426 4.70431 58.9095 5.82528 58.298 6.67798L55.3741 10.5966Z" fill="#FFD54E"/>
+<path d="M50.4607 6.87887C50.4224 7.92319 49.658 8.74715 48.7694 8.71841H48.2247C47.3361 8.66092 46.6386 7.78906 46.6768 6.73515L46.8583 1.83929C46.8966 0.794971 47.661 -0.0289897 48.5496 -0.000246862H49.0943C49.9925 0.0572388 50.6804 0.929104 50.6422 1.98301L50.4607 6.87887Z" fill="#FFD54E"/>
+<path d="M92.8185 56.844C92.4936 57.7734 92.1114 58.7123 91.6623 59.6225V71.0142H89.9711V62.5638C89.5984 63.1004 89.2066 63.6177 88.8244 64.0585C88.6715 63.6369 88.1651 62.6597 87.8689 62.2189C89.1875 60.7914 90.4393 58.559 91.1559 56.3458L92.8185 56.844ZM102.45 58.7123V60.2357H92.3694V58.7123H96.8508C96.6119 58.1279 96.2202 57.4093 95.8762 56.844L97.4624 56.25C97.9019 56.8919 98.3892 57.7542 98.609 58.3291L97.7203 58.7219H102.45V58.7123ZM93.2389 65.6872H101.533V70.8897H99.8894V70.449H94.8251V70.9376H93.2389V65.6872ZM101.323 62.5255H93.4683V61.0596H101.323V62.5255ZM93.4683 63.3495H101.323V64.8154H93.4683V63.3495ZM94.8156 67.1819V68.9543H99.8798V67.1819H94.8156Z" fill="#3F3F3F"/>
+<path d="M110.379 60.4268C110.007 61.0878 109.529 61.7489 109.013 62.41V70.9466H107.207V64.422C106.739 64.8915 106.27 65.3322 105.793 65.6963C105.649 65.2843 105.181 64.2208 104.904 63.7609C106.299 62.7837 107.838 61.2603 108.745 59.7178L110.379 60.4268ZM110.112 57.0159C109.08 58.4627 107.474 60.0052 106.003 60.9633C105.812 60.5417 105.363 59.7657 105.076 59.3728C106.299 58.616 107.675 57.3417 108.334 56.2974L110.102 57.0159H110.112ZM119.638 66.8651H117.488V69.0975C117.488 69.9598 117.335 70.4005 116.724 70.6688C116.141 70.937 115.357 70.937 114.297 70.937C114.22 70.4388 113.953 69.7394 113.714 69.27C114.373 69.2987 115.109 69.2987 115.31 69.2987C115.529 69.2795 115.596 69.2221 115.596 69.0496V66.8651H112.309C112.94 67.4592 113.704 68.2831 114.096 68.8292L112.701 69.8161C112.357 69.2221 111.554 68.2927 110.895 67.6316L112.051 66.8651H109.854V65.2747H115.587V64.3741H110.226V62.8507H119.304V64.3741H117.488V65.2747H119.619L119.638 66.8651ZM118.797 62.1705H111.039V56.7381H118.797V62.1705ZM116.915 58.0315H112.844V58.8172H116.915V58.0315ZM116.915 60.0435H112.844V60.8579H116.915V60.0435Z" fill="#3F3F3F"/>
+<path d="M126.873 63.6178C126.587 65.0454 126.185 66.5208 125.65 67.6993C125.899 67.8526 126.195 68.0729 126.606 68.3316C127.685 68.9736 129.157 69.0694 130.992 69.0694C132.826 69.0694 135.597 68.9161 137.336 68.6574C137.116 69.1556 136.801 70.0754 136.792 70.5736C135.511 70.6502 132.731 70.7652 130.896 70.7652C128.813 70.7652 127.494 70.5927 126.367 69.9316C125.707 69.5676 125.144 69.0502 124.828 69.0502C124.465 69.0502 123.902 70.1233 123.51 71.0143L122.268 69.2418C122.812 68.5807 123.376 68.0634 123.911 67.7376C124.274 66.9711 124.59 65.9747 124.819 65.0166H122.841C123.204 64.0873 123.605 62.8322 123.968 61.6058H122.554V59.9387H126.223C125.899 61.0405 125.516 62.2956 125.144 63.3974H125.784L126.071 63.3304L126.854 63.6082L126.873 63.6178ZM124.236 59.4788C124.064 58.7699 123.644 57.6393 123.376 56.777L125.019 56.2788C125.316 57.1315 125.727 58.1758 125.946 58.8848L124.236 59.4788ZM128.842 68.3795H127.227V61.5483H128.383V56.7387H135.138V61.5483H136.285V66.7987C136.285 67.5364 136.161 67.9292 135.674 68.1783C135.215 68.4179 134.575 68.4274 133.734 68.4274C133.686 68.0155 133.514 67.4885 133.323 67.0765H130.972V67.5652H129.644V63.6082H133.734V66.9903H134.374C134.546 66.9903 134.594 66.9424 134.594 66.7891V62.9663H128.842V68.3891V68.3795ZM130.007 61.5387H130.886V59.0764H133.476V58.1183H130.017V61.5483L130.007 61.5387ZM132.387 64.7963H130.972V65.8981H132.387V64.7963ZM133.466 60.2357H132.224V61.5387H133.466V60.2357Z" fill="#3F3F3F"/>
+<path d="M141.274 64.5566C142.478 64.1638 143.204 63.4835 143.299 62.6596C143.252 62.6787 143.194 62.6787 143.127 62.6787C142.344 62.6787 141.637 62.1805 141.637 61.2608C141.637 60.341 142.344 59.8428 143.175 59.8428C144.284 59.8428 144.866 60.6955 144.866 62.0081C144.866 63.7805 143.72 65.2273 141.78 65.8117L141.283 64.5566H141.274Z" fill="#3F3F3F"/>
+<path d="M157.279 66.0318C157.078 66.8175 156.715 67.5744 156.132 68.2163C158.168 68.8965 160.738 68.954 163.92 68.9349C163.576 69.3564 163.232 70.1421 163.117 70.7936C159.716 70.7169 156.83 70.4774 154.594 69.4906C153.543 70.0846 152.167 70.6019 150.351 70.966C150.132 70.5253 149.635 69.7397 149.224 69.2989C150.724 69.0594 151.871 68.7528 152.769 68.3696C152.157 67.9001 151.622 67.2965 151.154 66.6067L152.578 66.0223H150.915V59.5647H155.549V58.6353H149.549V56.9683H163.28V58.6353H157.508V59.5647H162.305V66.0223H157.279V66.0318ZM152.664 62.0941H155.549V61.0881H152.664V62.0941ZM152.664 64.5085H155.53C155.549 64.336 155.549 64.1635 155.549 63.9911V63.4929H152.664V64.518V64.5085ZM152.826 66.0318C153.285 66.5971 153.763 67.0378 154.345 67.4019C154.804 66.9803 155.062 66.5396 155.253 66.0318H152.826ZM160.451 63.4833H157.508V64.0007C157.508 64.154 157.508 64.3264 157.489 64.4989H160.451V63.4737V63.4833ZM157.508 61.0881V62.0941H160.451V61.0881H157.508Z" fill="#3F3F3F"/>
+<path d="M172.288 61.0879C172.24 62.7071 172.02 64.652 171.208 66.5203C171.963 67.2293 172.651 67.8712 173.1 68.4173L171.877 69.9694C171.485 69.4712 170.922 68.858 170.281 68.2065C169.622 69.1934 168.781 70.1227 167.616 70.9754C167.329 70.5826 166.727 69.9694 166.297 69.6724C167.472 68.8389 168.332 67.9095 168.944 66.9227C168.141 66.185 167.31 65.4281 166.612 64.8053C166.861 63.8664 167.128 62.6688 167.348 61.3753L166.469 61.4424L166.297 59.6699C166.708 59.6508 167.157 59.6412 167.625 59.622C167.778 58.4915 167.912 57.3609 167.969 56.3262L169.823 56.4028C169.727 57.3897 169.603 58.4627 169.431 59.5454L170.559 59.4783V58.4915H172.298V59.3825L173.11 59.3346V61.0113L172.278 61.0783L172.288 61.0879ZM169.154 61.2891C168.963 62.3238 168.781 63.349 168.571 64.24C168.963 64.5658 169.374 64.9203 169.775 65.2652C170.31 63.8472 170.492 62.4196 170.539 61.1933L169.144 61.2891H169.154ZM180.964 64.5083H177.83V68.9251C177.83 69.8832 177.629 70.3527 176.97 70.6497C176.339 70.9179 175.451 70.9659 174.228 70.9467C174.132 70.4293 173.865 69.6628 173.597 69.1742C174.381 69.1934 175.288 69.1934 175.537 69.1934C175.804 69.1934 175.881 69.1263 175.881 68.8964V64.5083H172.594V62.7358H175.881V61.2316C176.559 60.6376 177.247 59.7561 177.792 58.9418H173.196V57.2459H179.005L179.445 57.1501L180.697 58.0603C179.961 59.21 178.929 60.5226 177.811 61.5669V62.7454H180.945V64.5179L180.964 64.5083Z" fill="#3F3F3F"/>
+<path d="M197.142 68.7336C197.142 69.7396 196.922 70.2379 196.291 70.5253C195.651 70.8415 194.695 70.8702 193.281 70.851C193.214 70.3528 192.918 69.548 192.689 69.0594C193.568 69.1073 194.6 69.0881 194.887 69.0881C195.183 69.0881 195.297 68.9923 195.297 68.7145V66.3576H191.991V70.7456H190.109V66.3576H186.908C186.621 68.0726 186.058 69.7971 184.93 71.0235C184.634 70.6786 183.879 70.0367 183.458 69.8163C185.169 67.9289 185.312 65.1312 185.312 62.9372V57.3228H197.142V68.7336ZM190.109 64.6043V62.6689H187.166V62.9468C187.166 63.445 187.147 64.0198 187.118 64.5947H190.109V64.6043ZM187.156 59.1048V60.9252H190.099V59.1048H187.156ZM195.297 59.1048H191.991V60.9252H195.297V59.1048ZM195.297 64.6043V62.6689H191.991V64.6043H195.297Z" fill="#3F3F3F"/>
+</g>
+</g>
+</svg>
+    <span style="font-size:12px;color:#bbb;margin-left:12px;padding-left:12px;border-left:1px solid #eee;line-height:1.4;white-space:nowrap">第三方平台<br>API 說明文件</span>
+  </div>
+  <nav>
+    <a href="#" onclick="showHome()">首頁</a>
+    <a href="#" onclick="showChangelog()">更新日誌</a>
+    <a href="#" onclick="showContact()">聯絡我們</a>
+  </nav>
+</header>
+ 
+<div class="app-body">
+<!-- Sidebar -->
+<aside>
+  <div class="sidebar-home">
+    <button class="sidebar-home-btn" onclick="showHome()">
+      🏠 首頁 &amp; 服務簡介
+    </button>
+  </div>
+ 
+  <!-- Module 1: 帳號建立 -->
+  <div class="module-group">
+    <div class="module-header open" onclick="toggleModule(this)">
+      <div>
+        <div class="module-title">帳號建立 API</div>
+        <div class="module-desc">商家帳號建立、OTP 驗證及登入</div>
+      </div>
+      <span class="arrow"></span>
+    </div>
+    <div class="api-list open">
+      <div class="api-item" onclick="showApi('account-register')">
+        <span class="method-tag tag-post">POST</span>建立帳號
+      </div>
+      <div class="api-item" onclick="showApi('account-verify')">
+        <span class="method-tag tag-post">POST</span>確認註冊驗證碼
+      </div>
+      <div class="api-item" onclick="showApi('account-query')">
+        <span class="method-tag tag-post">POST</span>商家登入
+      </div>
+      <div class="api-item" onclick="showApi('account-deactivate')">
+        <span class="method-tag tag-post">POST</span>確認登入驗證碼
+      </div>
+    </div>
+  </div>
+ 
+  <!-- Module 2: 商家管理 -->
+  <div class="module-group">
+    <div class="module-header" onclick="toggleModule(this)">
+      <div>
+        <div class="module-title">商家管理 API</div>
+        <div class="module-desc">店鋪資料新增、查詢與修改</div>
+      </div>
+      <span class="arrow"></span>
+    </div>
+    <div class="api-list">
+      <div class="api-item" onclick="showApi('merchant-register')">
+        <span class="method-tag tag-post">POST</span>新增店鋪資料
+      </div>
+      <div class="api-item" onclick="showApi('merchant-query')">
+        <span class="method-tag tag-get">GET</span>商家資訊查詢
+      </div>
+      <div class="api-item" onclick="showApi('merchant-update')">
+        <span class="method-tag tag-put">PUT</span>修改店鋪資料
+      </div>
+    </div>
+  </div>
+ 
+  <!-- Module 3: 工作發佈 API -->
+  <div class="module-group">
+    <div class="module-header" onclick="toggleModule(this)">
+      <div>
+        <div class="module-title">工作發佈 API</div>
+        <div class="module-desc">工作發佈、查詢與取消管理</div>
+      </div>
+      <span class="arrow"></span>
+    </div>
+    <div class="api-list">
+      <div class="api-item" onclick="showApi('job-publish')">
+        <span class="method-tag tag-post">POST</span>發佈工作
+      </div>
+      <div class="api-item" onclick="showApi('job-update')">
+        <span class="method-tag tag-put">PUT</span>發佈前資訊查詢
+      </div>
+      <div class="api-item" onclick="showApi('job-close')">
+        <span class="method-tag tag-post">POST</span>取消工作
+      </div>
+      <div class="api-item" onclick="showApi('job-query')">
+        <span class="method-tag tag-get">GET</span>單一工作資訊
+      </div>
+      <div class="api-item" onclick="showApi('job-list')">
+        <span class="method-tag tag-get">GET</span>發佈前資訊查詢
+      </div>
+    </div>
+  </div>
+ 
+  <!-- Module 4: 工作查詢 API -->
+  <div class="module-group">
+    <div class="module-header" onclick="toggleModule(this)">
+      <div>
+        <div class="module-title">工作查詢 API</div>
+        <div class="module-desc">查詢工作詳情、日程與媒合列表</div>
+      </div>
+      <span class="arrow"></span>
+    </div>
+    <div class="api-list">
+      <div class="api-item" onclick="showApi('job-info')">
+        <span class="method-tag tag-get">GET</span>單一工作資訊
+      </div>
+      <div class="api-item" onclick="showApi('job-schedule')">
+        <span class="method-tag tag-get">GET</span>日程列表
+      </div>
+      <div class="api-item" onclick="showApi('job-match-list')">
+        <span class="method-tag tag-get">GET</span>媒合列表
+      </div>
+    </div>
+  </div>
+ 
+  <!-- Module 5: 對帳付款 (隱藏) -->
+  <div class="module-group" style="display:none">
+    <div class="module-header" onclick="toggleModule(this)">
+      <div>
+        <div class="module-title">對帳付款 API</div>
+        <div class="module-desc">每日對帳或撥款金額明細</div>
+      </div>
+      <span class="arrow"></span>
+    </div>
+    <div class="api-list">
+      <div class="api-item" onclick="showApi('recon-query')">
+        <span class="method-tag tag-get">GET</span>對帳查詢
+      </div>
+      <div class="api-item" onclick="showApi('recon-payment')">
+        <span class="method-tag tag-post">POST</span>撥款申請
+      </div>
+    </div>
+  </div>
+ 
+  <!-- Module 6: Webhook (隱藏) -->
+  <div class="module-group" style="display:none">
+    <div class="module-header" onclick="toggleModule(this)">
+      <div>
+        <div class="module-title">Webhook 通知</div>
+        <div class="module-desc">事件推播通知說明</div>
+      </div>
+      <span class="arrow"></span>
+    </div>
+    <div class="api-list">
+      <div class="api-item" onclick="showApi('webhook-tx')">
+        <span class="method-tag tag-post">POST</span>交易結果通知
+      </div>
+      <div class="api-item" onclick="showApi('webhook-bind')">
+        <span class="method-tag tag-post">POST</span>綁定狀態通知
+      </div>
+    </div>
+  </div>
+ 
+  <!-- Module 7: 其他 (隱藏) -->
+  <div class="module-group" style="display:none">
+    <div class="module-header" onclick="toggleModule(this)">
+      <div>
+        <div class="module-title">其他</div>
+        <div class="module-desc">分期付款、狀態確認等</div>
+      </div>
+      <span class="arrow"></span>
+    </div>
+    <div class="api-list">
+      <div class="api-item" onclick="showApi('installment')">
+        <span class="method-tag tag-post">POST</span>分期付款申請
+      </div>
+      <div class="api-item" onclick="showApi('health')">
+        <span class="method-tag tag-get">GET</span>服務健康檢查
+      </div>
+    </div>
+  </div>
+</aside>
+ 
+<!-- Main -->
+<main id="main-content">
+  <!-- ══════════════ HOME PAGE ══════════════ -->
+  <div id="page-home" class="content-wrap">
+    <div class="home-intro">
+      <h2>簡介</h2>
+      <p>
+        本平台為 Worky 提供第三方發佈工作的整合方案，提供第三方平台快速、安全的串接。當商家完成驗證流程後，系統將自動通知商家並完成帳號建立確認並可開始進行發佈工作。
+        本文件說明如何透過 API 串接平台各項功能，包含發佈工作、帳號建立等模組。
+      </p>
+      <p style="margin-top:10px">
+        如對本文件有任何疑問，請聯繫技術支援團隊。所有 API 均需使用 HTTPS，並在 Header 中帶入有效的 <code style="background:#FFF8E1;padding:2px 6px;border-radius:4px;color:var(--primary-dark)">Authorization</code> Token。
+      </p>
+    </div>
+ 
+    <div class="home-flow">
+      <h2>🔄 服務架構流程圖</h2>
+      <div class="flow-diagram">
+        <svg viewBox="0 0 760 500" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px">
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#E6950A"/>
+            </marker>
+            <marker id="arrow-gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#90a4ae"/>
+            </marker>
+            <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#43a047"/>
+            </marker>
+            <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#e53935"/>
+            </marker>
+          </defs>
+ 
+          <!-- Column headers -->
+          <rect x="20" y="10" width="150" height="40" rx="8" fill="#e3f2fd"/>
+          <text x="95" y="26" text-anchor="middle" font-size="12" font-weight="700" fill="#1565c0">👤 商家會員</text>
+          <text x="95" y="42" text-anchor="middle" font-size="10" fill="#5c8fc7">（第三方平台使用者）</text>
+ 
+          <rect x="290" y="10" width="180" height="40" rx="8" fill="#fff8e1"/>
+          <text x="380" y="26" text-anchor="middle" font-size="12" font-weight="700" fill="#e65100">🔗 第三方中介平台</text>
+          <text x="380" y="42" text-anchor="middle" font-size="10" fill="#b36a00">（Partner Platform）</text>
+ 
+          <rect x="580" y="10" width="155" height="40" rx="8" fill="#e8f5e9"/>
+          <text x="657" y="26" text-anchor="middle" font-size="12" font-weight="700" fill="#2e7d32">⚙️ Worky API</text>
+          <text x="657" y="42" text-anchor="middle" font-size="10" fill="#4caf50">（工作平台）</text>
+ 
+          <!-- Vertical lane lines -->
+          <line x1="95" y1="60" x2="95" y2="478" stroke="#e3f2fd" stroke-width="2" stroke-dasharray="4,4"/>
+          <line x1="380" y1="60" x2="380" y2="478" stroke="#fff3e0" stroke-width="2" stroke-dasharray="4,4"/>
+          <line x1="657" y1="60" x2="657" y2="478" stroke="#e8f5e9" stroke-width="2" stroke-dasharray="4,4"/>
+ 
+          <!-- Phase label: 帳號建立 (steps 1-5, y=68~268) -->
+          <rect x="6" y="68" width="8" height="200" rx="3" fill="#E6950A" opacity="0.4"/>
+          <text x="10" y="168" font-size="9" fill="#E6950A" font-weight="700" text-anchor="middle" dominant-baseline="central" transform="rotate(-90,10,168)">帳號建立</text>
+ 
+          <!-- Step 1 -->
+          <text x="16" y="96" font-size="11" fill="#90a4ae" font-weight="600">①</text>
+          <line x1="95" y1="93" x2="380" y2="93" stroke="#E6950A" stroke-width="1.5" marker-end="url(#arrow)"/>
+          <rect x="130" y="79" width="195" height="28" rx="5" fill="#fff" stroke="#E6950A" stroke-width="1"/>
+          <text x="228" y="97" text-anchor="middle" font-size="11" fill="#333">提供手機號碼申請建立 Worky 帳號</text>
+ 
+          <!-- Step 2 -->
+          <text x="16" y="135" font-size="11" fill="#90a4ae" font-weight="600">②</text>
+          <line x1="380" y1="132" x2="657" y2="132" stroke="#E6950A" stroke-width="1.5" marker-end="url(#arrow)"/>
+          <rect x="405" y="118" width="205" height="28" rx="5" fill="#fff" stroke="#E6950A" stroke-width="1"/>
+          <text x="508" y="136" text-anchor="middle" font-size="11" fill="#333">POST /v1/account/register</text>
+ 
+          <!-- Step 3 -->
+          <text x="16" y="174" font-size="11" fill="#90a4ae" font-weight="600">③</text>
+          <line x1="657" y1="171" x2="95" y2="171" stroke="#E6950A" stroke-width="1.5" marker-end="url(#arrow)"/>
+          <rect x="230" y="157" width="235" height="28" rx="5" fill="#fff8e1" stroke="#ffb300" stroke-width="1"/>
+          <text x="348" y="175" text-anchor="middle" font-size="11" fill="#e65100">發送 OTP 驗證碼至商家會員手機</text>
+ 
+          <!-- Step 4 -->
+          <text x="16" y="213" font-size="11" fill="#90a4ae" font-weight="600">④</text>
+          <line x1="95" y1="210" x2="657" y2="210" stroke="#E6950A" stroke-width="1.5" marker-end="url(#arrow)"/>
+          <rect x="260" y="196" width="195" height="28" rx="5" fill="#fff" stroke="#E6950A" stroke-width="1"/>
+          <text x="358" y="214" text-anchor="middle" font-size="11" fill="#333">商家會員輸入 OTP 完成手機驗證</text>
+ 
+          <!-- Step 5 -->
+          <text x="16" y="252" font-size="11" fill="#90a4ae" font-weight="600">⑤</text>
+          <line x1="657" y1="249" x2="380" y2="249" stroke="#43a047" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+          <rect x="400" y="235" width="200" height="28" rx="5" fill="#e8f5e9" stroke="#43a047" stroke-width="1"/>
+          <text x="500" y="253" text-anchor="middle" font-size="11" fill="#2e7d32">✓ 帳號建立成功（account_id）</text>
+ 
+          <!-- Phase label: 工作發佈 (steps 6-9, y=278~480) -->
+          <rect x="6" y="278" width="8" height="202" rx="3" fill="#7c4dff" opacity="0.35"/>
+          <text x="10" y="379" font-size="9" fill="#7c4dff" font-weight="700" text-anchor="middle" dominant-baseline="central" transform="rotate(-90,10,379)">工作發佈</text>
+ 
+          <!-- Step 6 -->
+          <text x="16" y="305" font-size="11" fill="#90a4ae" font-weight="600">⑥</text>
+          <line x1="95" y1="302" x2="380" y2="302" stroke="#7c4dff" stroke-width="1.5" marker-end="url(#arrow)"/>
+          <rect x="110" y="288" width="215" height="28" rx="5" fill="#f3e5f5" stroke="#7c4dff" stroke-width="1"/>
+          <text x="218" y="306" text-anchor="middle" font-size="11" fill="#4a148c">商家會員填寫工作需求並送出</text>
+ 
+          <!-- Step 7 -->
+          <text x="16" y="344" font-size="11" fill="#90a4ae" font-weight="600">⑦</text>
+          <line x1="380" y1="341" x2="657" y2="341" stroke="#7c4dff" stroke-width="1.5" marker-end="url(#arrow)"/>
+          <rect x="400" y="327" width="205" height="28" rx="5" fill="#f3e5f5" stroke="#7c4dff" stroke-width="1"/>
+          <text x="503" y="345" text-anchor="middle" font-size="11" fill="#4a148c">POST /v1/job/publish</text>
+ 
+          <!-- Step 8a - success -->
+          <text x="16" y="383" font-size="11" fill="#90a4ae" font-weight="600">⑧</text>
+          <line x1="657" y1="380" x2="380" y2="380" stroke="#43a047" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+          <rect x="400" y="366" width="200" height="28" rx="5" fill="#e8f5e9" stroke="#43a047" stroke-width="1"/>
+          <text x="500" y="384" text-anchor="middle" font-size="11" fill="#2e7d32">✓ 發佈成功（job_id 回傳）</text>
+ 
+          <!-- Step 8b - fail -->
+          <line x1="657" y1="419" x2="380" y2="419" stroke="#e53935" stroke-width="1.5" marker-end="url(#arrow-red)"/>
+          <rect x="400" y="405" width="200" height="28" rx="5" fill="#ffebee" stroke="#e53935" stroke-width="1"/>
+          <text x="500" y="423" text-anchor="middle" font-size="11" fill="#c62828">✗ 發佈失敗（錯誤碼回傳）</text>
+ 
+          <!-- Step 9 -->
+          <text x="16" y="465" font-size="11" fill="#90a4ae" font-weight="600">⑨</text>
+          <line x1="380" y1="462" x2="95" y2="462" stroke="#90a4ae" stroke-width="1.5" marker-end="url(#arrow-gray)"/>
+          <rect x="115" y="448" width="230" height="28" rx="5" fill="#eceff1" stroke="#90a4ae" stroke-width="1"/>
+          <text x="230" y="466" text-anchor="middle" font-size="11" fill="#546e7a">通知商家會員發佈結果 + Worky 工作連結</text>
+        </svg>
+      </div>
+ 
+      <!-- Module Cards -->
+      <div style="margin-top:28px">
+        <h3 style="font-size:15px;font-weight:700;color:#333;margin-bottom:16px">📦 API 模組總覽</h3>
+        <div class="module-cards">
+          <div class="module-card" onclick="showApi('account-register')">
+            <div><h4>帳號建立 API</h4><p>商家帳號建立、OTP 驗證及登入、驗證 OTP、查詢及停用</p></div>
+            <span class="card-arrow">›</span>
+          </div>
+          <div class="module-card" onclick="showApi('merchant-register')">
+            <div><h4>商家管理 API</h4><p>新增店鋪、查詢商家資訊與更新店鋪資料</p></div>
+            <span class="card-arrow">›</span>
+          </div>
+          <div class="module-card" onclick="showApi('job-publish')">
+            <div><h4>工作發佈 API</h4><p>在 Worky 上發佈工作、查詢工作列表、取消工作及發佈前資訊查詢</p></div>
+            <span class="card-arrow">›</span>
+          </div>
+          <div class="module-card" onclick="showApi('job-info')">
+            <div><h4>工作查詢 API</h4><p>查詢單一工作詳情、日程列表及媒合列表</p></div>
+            <span class="card-arrow">›</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- ══════════════ API: job-publish ══════════════ -->
+  <div id="page-job-publish" class="api-page content-wrap">
+    <div class="api-header">
+      <div class="breadcrumb">工作發佈 API <span>›</span> 發佈工作</div>
+      <h1>發佈工作</h1>
+      <div class="endpoint">
+        <span class="method" style="color:var(--tag-post)">POST</span>
+        <span class="url">/employer/shop/job/publish</span>
+      </div>
+      <div class="desc">發佈工作至 Worky 平台。支援全新發佈或由範本工作轉為發佈。商家帳號必須已完成登入驗證（具備有效 Access Token）才可呼叫此 API。</div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'jp-req')">請求參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'jp-res')">回應參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'jp-err')">錯誤碼</button>
+      <button class="tab-btn" onclick="switchTab(this,'jp-ex')">範例</button>
+    </div>
+    <div id="jp-req" class="tab-panel active">
+      <div class="notice">需帶入 Access Token（Bearer）於 Authorization Header。全新工作請將 <code>job_sn</code> 傳入空字串。</div>
+      <div class="section-card">
+        <h3>Body 參數（必填）</h3>
+        <table>
+          <tr><th>參數名稱</th><th>類型</th><th>必填</th><th>說明</th></tr>
+          <tr><td class="param-name">shop_id</td><td><span class="type-badge">int</span></td><td><span class="required">必填</span></td><td>店鋪 ID，例如 <code>110123</code></td></tr>
+          <tr><td class="param-name">job_sn</td><td><span class="type-badge">string(14)</span></td><td><span class="required">必填</span></td><td>工作單號，全新工作傳入空字串 <code>""</code>，修改工作傳入既有單號</td></tr>
+          <tr><td class="param-name">job_type_level1</td><td><span class="type-badge">int</span></td><td><span class="required">必填</span></td><td>工作類型階層1 ID</td></tr>
+          <tr><td class="param-name">job_type_level2</td><td><span class="type-badge">int</span></td><td><span class="required">必填</span></td><td>工作類型階層2 ID</td></tr>
+          <tr><td class="param-name">job_type_level3</td><td><span class="type-badge">int</span></td><td><span class="required">必填</span></td><td>工作類型階層3 ID</td></tr>
+          <tr><td class="param-name">start_date_list</td><td><span class="type-badge">array</span></td><td><span class="required">必填</span></td><td>工作開始日期清單（YYYYMMDD 格式），例如 <code>[20231013, 20231014]</code>。修改工作時僅支援單日。</td></tr>
+          <tr><td class="param-name">start_time_period</td><td><span class="type-badge">string(5)</span></td><td><span class="required">必填</span></td><td>工作開始時段（HH:MM），例如 <code>08:00</code></td></tr>
+          <tr><td class="param-name">end_time_period</td><td><span class="type-badge">string(5)</span></td><td><span class="required">必填</span></td><td>工作結束時段（HH:MM），例如 <code>12:30</code></td></tr>
+          <tr><td class="param-name">work_minutes</td><td><span class="type-badge">int</span></td><td><span class="required">必填</span></td><td>實際工作時間（分鐘），例如 <code>240</code></td></tr>
+          <tr><td class="param-name">rest_minutes</td><td><span class="type-badge">int</span></td><td><span class="required">必填</span></td><td>休息時間（分鐘），例如 <code>30</code></td></tr>
+          <tr><td class="param-name">recruit_count</td><td><span class="type-badge">int</span></td><td><span class="required">必填</span></td><td>招募人數，例如 <code>10</code></td></tr>
+          <tr><td class="param-name">hourly_wage</td><td><span class="type-badge">int</span></td><td><span class="required">必填</span></td><td>時薪，例如 <code>1000</code></td></tr>
+          <tr><td class="param-name">city_id</td><td><span class="type-badge">int</span></td><td><span class="required">必填</span></td><td>縣市編號（type=1 的 id）</td></tr>
+          <tr><td class="param-name">district_id</td><td><span class="type-badge">int</span></td><td><span class="required">必填</span></td><td>區域編號（type=2 的 id）</td></tr>
+          <tr><td class="param-name">address</td><td><span class="type-badge">string</span></td><td><span class="required">必填</span></td><td>工作地址</td></tr>
+          <tr><td class="param-name">labor_insurance_deduction_type</td><td><span class="type-badge">int</span></td><td><span class="required">必填</span></td><td>勞保自付額代扣類型：1=不由平台代扣、2=臨時工、3=部分工時</td></tr>
+          <tr><td class="param-name">payment_method_id</td><td><span class="type-badge">int</span></td><td><span class="required">必填</span></td><td>付款方式 ID：1=信用卡、3=ATM、5=AFTEE 先享後付</td></tr>
+          <tr><td class="param-name">emergency_contact_phone</td><td><span class="type-badge">string</span></td><td><span class="required">必填</span></td><td>緊急聯絡電話</td></tr>
+        </table>
+      </div>
+      <div class="section-card">
+        <h3>Body 參數（選填）</h3>
+        <table>
+          <tr><th>參數名稱</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="param-name">match_target_favor</td><td><span class="type-badge">int</span></td><td>是否只媒合給最愛夥伴：0=否、1=是</td></tr>
+          <tr><td class="param-name">cover_photo</td><td><span class="type-badge">string</span></td><td>封面圖片 URL（空字串表示無封面）</td></tr>
+          <tr><td class="param-name">photos</td><td><span class="type-badge">array</span></td><td>環境照片 URL 清單（可空陣列）</td></tr>
+          <tr><td class="param-name">description</td><td><span class="type-badge">string</span></td><td>工作說明（可空字串）</td></tr>
+          <tr><td class="param-name">remarks</td><td><span class="type-badge">string</span></td><td>備注（可空字串，最多 700 字）</td></tr>
+          <tr><td class="param-name">workflow</td><td><span class="type-badge">string</span></td><td>工作流程說明</td></tr>
+          <tr><td class="param-name">teaching</td><td><span class="type-badge">string</span></td><td>教學影片，JSON 字串格式 <code>[{"title":"...","link":"..."}]</code></td></tr>
+          <tr><td class="param-name">contact_time</td><td><span class="type-badge">string</span></td><td>聯絡時間，例如 <code>14:00-18:00</code></td></tr>
+          <tr><td class="param-name">custom_name</td><td><span class="type-badge">string</span></td><td>工作自訂名稱（最多12字）</td></tr>
+          <tr><td class="param-name">skill_tags</td><td><span class="type-badge">array</span></td><td>技能標籤，最多3個，例如 <code>[{"id":9,"text":"技能1"}]</code></td></tr>
+          <tr><td class="param-name">benefit_tags</td><td><span class="type-badge">array</span></td><td>福利標籤，最多3個，例如 <code>[{"id":11,"text":"福利1"}]</code></td></tr>
+          <tr><td class="param-name">confirm_item</td><td><span class="type-badge">array</span></td><td>確認事項清單</td></tr>
+          <tr><td class="param-name">coupon_id_list</td><td><span class="type-badge">array</span></td><td>優惠券 ID 清單</td></tr>
+          <tr><td class="param-name">is_double_salary</td><td><span class="type-badge">int</span></td><td>是否雙薪：0=否、1=是</td></tr>
+          <tr><td class="param-name">origin_job_sn</td><td><span class="type-badge">string</span></td><td>來源工作單號（工單編輯時必須帶入）</td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="jp-res" class="tab-panel">
+      <div class="section-card">
+        <h3>成功回應欄位</h3>
+        <table>
+          <tr><th>欄位名稱</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="param-name">result</td><td><span class="type-badge">boolean</span></td><td>發佈結果，<code>true</code> 表示成功</td></tr>
+          <tr><td class="param-name">job_sn_list</td><td><span class="type-badge">array</span></td><td>發佈成功的工作單號清單，例如 <code>["16928729060001"]</code></td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="jp-err" class="tab-panel">
+      <div class="section-card">
+        <h3>常見錯誤情境</h3>
+        <table>
+          <tr><th>情境</th><th>說明</th></tr>
+          <tr><td class="param-name">Token 無效或過期</td><td>重新登入取得新的 Access Token</td></tr>
+          <tr><td class="param-name">shop_id 不存在或無權限</td><td>確認 shop_id 是否屬於目前登入商家</td></tr>
+          <tr><td class="param-name">工作日期不合法</td><td>日期需符合平台限制（需在未來一定天數內，且符合最短發佈間隔）</td></tr>
+          <tr><td class="param-name">超過每日發佈上限</td><td>確認每日發佈工作數量是否已達上限</td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="jp-ex" class="tab-panel">
+      <div class="section-card">
+        <h3>請求範例（全新工作）</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang">JSON Request</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre><span class="c">// POST /employer/shop/job/publish</span>
+{
+  <span class="k">"shop_id"</span>: <span class="n">110123</span>,
+  <span class="k">"job_sn"</span>: <span class="s">""</span>,
+  <span class="k">"job_type_level1"</span>: <span class="n">1</span>,
+  <span class="k">"job_type_level2"</span>: <span class="n">3</span>,
+  <span class="k">"job_type_level3"</span>: <span class="n">7</span>,
+  <span class="k">"start_date_list"</span>: [<span class="n">20231013</span>, <span class="n">20231014</span>],
+  <span class="k">"start_time_period"</span>: <span class="s">"08:00"</span>,
+  <span class="k">"end_time_period"</span>: <span class="s">"12:30"</span>,
+  <span class="k">"work_minutes"</span>: <span class="n">240</span>,
+  <span class="k">"rest_minutes"</span>: <span class="n">30</span>,
+  <span class="k">"recruit_count"</span>: <span class="n">10</span>,
+  <span class="k">"hourly_wage"</span>: <span class="n">1000</span>,
+  <span class="k">"city_id"</span>: <span class="n">19</span>,
+  <span class="k">"district_id"</span>: <span class="n">195</span>,
+  <span class="k">"address"</span>: <span class="s">"延平南路189號5樓"</span>,
+  <span class="k">"labor_insurance_deduction_type"</span>: <span class="n">1</span>,
+  <span class="k">"payment_method_id"</span>: <span class="n">1</span>,
+  <span class="k">"emergency_contact_phone"</span>: <span class="s">"0987654321"</span>
+}</pre>
+        </div>
+      </div>
+      <div class="section-card" style="margin-top:16px">
+        <h3>回應範例（成功）</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang">JSON Response</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre>{
+  <span class="k">"result"</span>: <span class="k">true</span>,
+  <span class="k">"job_sn_list"</span>: [
+    <span class="s">"16928729060001"</span>,
+    <span class="s">"16928729060002"</span>
+  ]
+}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ══════════════ API: job-update ══════════════ -->
+  <div id="page-job-update" class="api-page content-wrap">
+    <div class="api-header">
+      <div class="breadcrumb">工作發佈 API <span>›</span> 工作列表查詢</div>
+      <h1>商家範本工作列表</h1>
+      <div class="endpoint">
+        <span class="method" style="color:var(--tag-get)">GET</span>
+        <span class="url">/employer/shop/job/list</span>
+      </div>
+      <div class="desc">查詢指定店鋪的工作列表，可依狀態篩選。支援查詢已發佈、範本、已取消等各類工作。</div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'ju-req')">請求參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'ju-res')">回應參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'ju-ex')">範例</button>
+    </div>
+    <div id="ju-req" class="tab-panel active">
+      <div class="section-card">
+        <h3>Query 參數</h3>
+        <table>
+          <tr><th>參數名稱</th><th>類型</th><th>必填</th><th>說明</th></tr>
+          <tr><td class="param-name">shop_id</td><td><span class="type-badge">int</span></td><td><span class="required">必填</span></td><td>店鋪 ID，例如 <code>110123</code></td></tr>
+          <tr><td class="param-name">status</td><td><span class="type-badge">int</span></td><td><span class="optional">選填</span></td><td>工作狀態篩選：0=範本、1=已發佈、7=停止媒合、8=已刪除、9=已取消</td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="ju-res" class="tab-panel">
+      <div class="section-card">
+        <h3>成功回應欄位</h3>
+        <table>
+          <tr><th>欄位名稱</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="param-name">count</td><td><span class="type-badge">int</span></td><td>工作總數</td></tr>
+          <tr><td class="param-name">items</td><td><span class="type-badge">object[]</span></td><td>工作清單</td></tr>
+          <tr><td class="param-name">items[].job_sn</td><td><span class="type-badge">string</span></td><td>工作單號</td></tr>
+          <tr><td class="param-name">items[].job_type</td><td><span class="type-badge">string</span></td><td>工作類型，例如 <code>外場服務員 - 接待</code></td></tr>
+          <tr><td class="param-name">items[].job_name</td><td><span class="type-badge">string</span></td><td>工作自訂名稱</td></tr>
+          <tr><td class="param-name">items[].start_at</td><td><span class="type-badge">int</span></td><td>工作開始時間戳</td></tr>
+          <tr><td class="param-name">items[].end_at</td><td><span class="type-badge">int</span></td><td>工作結束時間戳</td></tr>
+          <tr><td class="param-name">items[].status</td><td><span class="type-badge">int</span></td><td>工作狀態</td></tr>
+          <tr><td class="param-name">items[].hourly_wage</td><td><span class="type-badge">int</span></td><td>時薪</td></tr>
+          <tr><td class="param-name">items[].cover_photo</td><td><span class="type-badge">string</span></td><td>封面照 URL</td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="ju-ex" class="tab-panel">
+      <div class="section-card">
+        <h3>請求範例</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang">cURL</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre><span class="k">curl</span> -X GET \
+  <span class="s">"https://api.worky.tw/employer/shop/job/list?shop_id=110123&status=1"</span> \
+  -H <span class="s">"Authorization: Bearer eyJhbGciOiJSUzI1NiJ9..."</span></pre>
+        </div>
+      </div>
+      <div class="section-card" style="margin-top:16px">
+        <h3>回應範例</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang">JSON Response</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre>{
+  <span class="k">"count"</span>: <span class="n">1</span>,
+  <span class="k">"items"</span>: [
+    {
+      <span class="k">"job_sn"</span>: <span class="s">"16928729060001"</span>,
+      <span class="k">"job_type"</span>: <span class="s">"外場服務人員 - 點餐送餐"</span>,
+      <span class="k">"job_name"</span>: <span class="s">"工作名稱"</span>,
+      <span class="k">"status"</span>: <span class="n">1</span>,
+      <span class="k">"hourly_wage"</span>: <span class="n">200</span>,
+      <span class="k">"start_at"</span>: <span class="n">1684195200</span>,
+      <span class="k">"end_at"</span>: <span class="n">1684231200</span>
+    }
+  ]
+}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ══════════════ API: job-close ══════════════ -->
+  <div id="page-job-close" class="api-page content-wrap">
+    <div class="api-header">
+      <div class="breadcrumb">工作發佈 API <span>›</span> 取消工作</div>
+      <h1>取消工作</h1>
+      <div class="endpoint">
+        <span class="method" style="color:var(--tag-post)">POST</span>
+        <span class="url">/employer/shop/job/cancel</span>
+      </div>
+      <div class="desc">取消已發佈的工作。取消後工作狀態將變更為「已取消」，已媒合的打工夥伴將收到通知。注意：取消工作可能產生罰金，請先確認相關規範。</div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'jc-req')">請求參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'jc-res')">回應參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'jc-ex')">範例</button>
+    </div>
+    <div id="jc-req" class="tab-panel active">
+      <div class="notice">需帶入 Access Token（Bearer）於 Authorization Header。</div>
+      <div class="section-card">
+        <h3>Body 參數</h3>
+        <table>
+          <tr><th>參數名稱</th><th>類型</th><th>必填</th><th>說明</th></tr>
+          <tr><td class="param-name">job_sn</td><td><span class="type-badge">string</span></td><td><span class="required">必填</span></td><td>工作單號，例如 <code>16928729060001</code></td></tr>
+          <tr><td class="param-name">cancel_reason</td><td><span class="type-badge">int</span></td><td><span class="required">必填</span></td><td>取消原因代碼</td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="jc-res" class="tab-panel">
+      <div class="section-card">
+        <h3>成功回應欄位</h3>
+        <table>
+          <tr><th>欄位名稱</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="param-name">result</td><td><span class="type-badge">boolean</span></td><td>取消結果，<code>true</code> 表示成功</td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="jc-ex" class="tab-panel">
+      <div class="section-card">
+        <h3>請求範例</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang">JSON Request</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre><span class="c">// POST /employer/shop/job/cancel</span>
+{
+  <span class="k">"job_sn"</span>: <span class="s">"16928729060001"</span>,
+  <span class="k">"cancel_reason"</span>: <span class="n">1</span>
+}</pre>
+        </div>
+      </div>
+      <div class="section-card" style="margin-top:16px">
+        <h3>回應範例</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang">JSON Response</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre>{
+  <span class="k">"result"</span>: <span class="k">true</span>
+}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ══════════════ API: job-query ══════════════ -->
+  <div id="page-job-query" class="api-page content-wrap">
+    <div class="api-header">
+      <div class="breadcrumb">工作發佈 API <span>›</span> 查詢工作狀態</div>
+      <h1>單一工作資訊</h1>
+      <div class="endpoint">
+        <span class="method" style="color:var(--tag-get)">GET</span>
+        <span class="url">/employer/shop/job/info</span>
+      </div>
+      <div class="desc">查詢指定工作單號的詳細資訊，包含工作狀態、媒合情況、時薪、地點等完整資料。</div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'jq-req')">請求參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'jq-res')">回應參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'jq-ex')">範例</button>
+    </div>
+    <div id="jq-req" class="tab-panel active">
+      <div class="section-card">
+        <h3>Query 參數</h3>
+        <table>
+          <tr><th>參數名稱</th><th>類型</th><th>必填</th><th>說明</th></tr>
+          <tr><td class="param-name">job_sn</td><td><span class="type-badge">string</span></td><td><span class="required">必填</span></td><td>工作單號，例如 <code>16928729060001</code></td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="jq-res" class="tab-panel">
+      <div class="section-card">
+        <h3>成功回應欄位（主要欄位）</h3>
+        <table>
+          <tr><th>欄位名稱</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="param-name">job_sn</td><td><span class="type-badge">string</span></td><td>工作單號</td></tr>
+          <tr><td class="param-name">shop_id</td><td><span class="type-badge">int</span></td><td>店鋪 ID</td></tr>
+          <tr><td class="param-name">status</td><td><span class="type-badge">int</span></td><td>工作狀態：0=範本、1=媒合中、7=停止媒合、8=已刪除、9=已取消</td></tr>
+          <tr><td class="param-name">job_type</td><td><span class="type-badge">string</span></td><td>工作類型描述</td></tr>
+          <tr><td class="param-name">hourly_wage</td><td><span class="type-badge">int</span></td><td>時薪</td></tr>
+          <tr><td class="param-name">recruit_count</td><td><span class="type-badge">int</span></td><td>招募人數</td></tr>
+          <tr><td class="param-name">start_at</td><td><span class="type-badge">int</span></td><td>工作開始時間戳</td></tr>
+          <tr><td class="param-name">end_at</td><td><span class="type-badge">int</span></td><td>工作結束時間戳</td></tr>
+          <tr><td class="param-name">city</td><td><span class="type-badge">string</span></td><td>縣市名稱</td></tr>
+          <tr><td class="param-name">district</td><td><span class="type-badge">string</span></td><td>區域名稱</td></tr>
+          <tr><td class="param-name">address</td><td><span class="type-badge">string</span></td><td>工作地址</td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="jq-ex" class="tab-panel">
+      <div class="section-card">
+        <h3>請求範例</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang">cURL</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre><span class="k">curl</span> -X GET \
+  <span class="s">"https://api.worky.tw/employer/shop/job/info?job_sn=16928729060001"</span> \
+  -H <span class="s">"Authorization: Bearer eyJhbGciOiJSUzI1NiJ9..."</span></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ══════════════ API: job-list ══════════════ -->
+  <div id="page-job-list" class="api-page content-wrap">
+    <div class="api-header">
+      <div class="breadcrumb">工作發佈 API <span>›</span> 工作列表查詢</div>
+      <h1>進入發佈工作前資訊</h1>
+      <div class="endpoint">
+        <span class="method" style="color:var(--tag-get)">GET</span>
+        <span class="url">/employer/shop/job/pre-info</span>
+      </div>
+      <div class="desc">在發佈工作前，取得必要的限制資訊，包含可發佈工作數量上限、時薪範圍、工作時數限制、保險設定等。建議在進入發佈工作頁面前呼叫此 API。</div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'jl-req')">請求參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'jl-res')">回應參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'jl-ex')">範例</button>
+    </div>
+    <div id="jl-req" class="tab-panel active">
+      <div class="section-card">
+        <h3>Query 參數</h3>
+        <table>
+          <tr><th>參數名稱</th><th>類型</th><th>必填</th><th>說明</th></tr>
+          <tr><td class="param-name">shop_id</td><td><span class="type-badge">int</span></td><td><span class="required">必填</span></td><td>店鋪 ID，例如 <code>110123</code></td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="jl-res" class="tab-panel">
+      <div class="section-card">
+        <h3>成功回應欄位</h3>
+        <table>
+          <tr><th>欄位名稱</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="param-name">max_draft_job_count</td><td><span class="type-badge">int</span></td><td>範本工作數量上限</td></tr>
+          <tr><td class="param-name">draft_job_count</td><td><span class="type-badge">int</span></td><td>目前範本工作數量</td></tr>
+          <tr><td class="param-name">max_published_job_count</td><td><span class="type-badge">int</span></td><td>發佈工作數量上限</td></tr>
+          <tr><td class="param-name">published_job_count</td><td><span class="type-badge">int</span></td><td>目前發佈工作數量</td></tr>
+          <tr><td class="param-name">min_publish_interval_seconds</td><td><span class="type-badge">int</span></td><td>最快可發佈工作間隔秒數</td></tr>
+          <tr><td class="param-name">work_date_interval_days</td><td><span class="type-badge">int</span></td><td>工作日期間隔天數</td></tr>
+          <tr><td class="param-name">daily_max_published_job_count</td><td><span class="type-badge">int</span></td><td>每日發佈工作數量上限</td></tr>
+          <tr><td class="param-name">min_work_minutes</td><td><span class="type-badge">int</span></td><td>工作時長最小值（分鐘）</td></tr>
+          <tr><td class="param-name">max_work_hours</td><td><span class="type-badge">int</span></td><td>工作時數上限</td></tr>
+          <tr><td class="param-name">max_recruit_count</td><td><span class="type-badge">int</span></td><td>招募人數上限</td></tr>
+          <tr><td class="param-name">max_hourly_wage</td><td><span class="type-badge">int</span></td><td>最高時薪</td></tr>
+          <tr><td class="param-name">favor_count</td><td><span class="type-badge">int</span></td><td>商家最愛名單總人數</td></tr>
+          <tr><td class="param-name">default_payment_method_id</td><td><span class="type-badge">int</span></td><td>預設付款渠道 ID（0=無、1=信用卡、3=ATM、5=AFTEE）</td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="jl-ex" class="tab-panel">
+      <div class="section-card">
+        <h3>請求範例</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang">cURL</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre><span class="k">curl</span> -X GET \
+  <span class="s">"https://api.worky.tw/employer/shop/job/pre-info?shop_id=110123"</span> \
+  -H <span class="s">"Authorization: Bearer eyJhbGciOiJSUzI1NiJ9..."</span></pre>
+        </div>
+      </div>
+      <div class="section-card" style="margin-top:16px">
+        <h3>回應範例</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang">JSON Response</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre>{
+  <span class="k">"max_draft_job_count"</span>: <span class="n">5</span>,
+  <span class="k">"draft_job_count"</span>: <span class="n">2</span>,
+  <span class="k">"max_published_job_count"</span>: <span class="n">200</span>,
+  <span class="k">"published_job_count"</span>: <span class="n">10</span>,
+  <span class="k">"min_work_minutes"</span>: <span class="n">60</span>,
+  <span class="k">"max_work_hours"</span>: <span class="n">12</span>,
+  <span class="k">"max_recruit_count"</span>: <span class="n">10</span>,
+  <span class="k">"max_hourly_wage"</span>: <span class="n">1000</span>,
+  <span class="k">"default_payment_method_id"</span>: <span class="n">1</span>
+}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ══════════════ API: job-info ══════════════ -->
+  <div id="page-job-info" class="api-page content-wrap">
+    <div class="api-header">
+      <div class="breadcrumb">工作查詢 API <span>›</span> 單一工作資訊</div>
+      <h1>單一工作資訊</h1>
+      <div class="endpoint">
+        <span class="method" style="color:var(--tag-get)">GET</span>
+        <span class="url">/employer/shop/job/info</span>
+      </div>
+      <div class="desc">依工作單號查詢該工作的完整資訊，包含工作類型、時間、地點、薪資、媒合條件、付款狀態等詳細欄位。</div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'ji-req')">請求參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'ji-res')">回應參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'ji-ex')">範例</button>
+    </div>
+    <div id="ji-req" class="tab-panel active">
+      <div class="notice">需帶入 Access Token（Bearer）於 Authorization Header。</div>
+      <div class="section-card">
+        <h3>Query 參數</h3>
+        <table>
+          <tr><th>參數名稱</th><th>類型</th><th>必填</th><th>說明</th></tr>
+          <tr><td class="param-name">job_sn</td><td><span class="type-badge">string(14)</span></td><td><span class="required">必填</span></td><td>工作單號，例如 <code>16928729060001</code></td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="ji-res" class="tab-panel">
+      <div class="section-card">
+        <h3>成功回應欄位（主要）</h3>
+        <table>
+          <tr><th>欄位名稱</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="param-name">job_sn</td><td><span class="type-badge">string</span></td><td>工作單號</td></tr>
+          <tr><td class="param-name">shop_id</td><td><span class="type-badge">int</span></td><td>店鋪 ID</td></tr>
+          <tr><td class="param-name">job_type_level1</td><td><span class="type-badge">int</span></td><td>工作類型階層 1 ID</td></tr>
+          <tr><td class="param-name">job_type_level2</td><td><span class="type-badge">int</span></td><td>工作類型階層 2 ID</td></tr>
+          <tr><td class="param-name">job_type_level3</td><td><span class="type-badge">int</span></td><td>工作類型階層 3 ID</td></tr>
+          <tr><td class="param-name">status</td><td><span class="type-badge">int</span></td><td>工作狀態：0=範本、1=媒合中、7=停止媒合、8=已刪除、9=已取消</td></tr>
+          <tr><td class="param-name">schedule_type</td><td><span class="type-badge">int</span></td><td>區段類型：1=單日、2=多日</td></tr>
+          <tr><td class="param-name">start_at</td><td><span class="type-badge">int64</span></td><td>工作開始時間戳，例如 <code>1684195200</code></td></tr>
+          <tr><td class="param-name">end_at</td><td><span class="type-badge">int64</span></td><td>工作結束時間戳，例如 <code>1684231200</code></td></tr>
+          <tr><td class="param-name">start_date</td><td><span class="type-badge">int</span></td><td>工作開始日（YYYYMMDD），例如 <code>20230901</code></td></tr>
+          <tr><td class="param-name">end_date</td><td><span class="type-badge">int</span></td><td>工作結束日（YYYYMMDD），例如 <code>20230901</code></td></tr>
+          <tr><td class="param-name">start_time_period</td><td><span class="type-badge">string</span></td><td>工作開始時段（HH:MM），例如 <code>08:00</code></td></tr>
+          <tr><td class="param-name">end_time_period</td><td><span class="type-badge">string</span></td><td>工作結束時段（HH:MM），例如 <code>12:30</code></td></tr>
+          <tr><td class="param-name">work_minutes</td><td><span class="type-badge">int</span></td><td>實際工作時間（分鐘）</td></tr>
+          <tr><td class="param-name">rest_minutes</td><td><span class="type-badge">int</span></td><td>休息時間（分鐘）</td></tr>
+          <tr><td class="param-name">recruit_count</td><td><span class="type-badge">int</span></td><td>招募人數</td></tr>
+          <tr><td class="param-name">recruited_count</td><td><span class="type-badge">int</span></td><td>已招募人數</td></tr>
+          <tr><td class="param-name">recruit_deadline</td><td><span class="type-badge">int</span></td><td>招募截止時間戳</td></tr>
+          <tr><td class="param-name">hourly_wage</td><td><span class="type-badge">int</span></td><td>時薪</td></tr>
+          <tr><td class="param-name">show_hourly_wage</td><td><span class="type-badge">int</span></td><td>顯示時薪（含活動加成）</td></tr>
+          <tr><td class="param-name">city_id</td><td><span class="type-badge">int</span></td><td>縣市 ID</td></tr>
+          <tr><td class="param-name">district_id</td><td><span class="type-badge">int</span></td><td>區域 ID</td></tr>
+          <tr><td class="param-name">address</td><td><span class="type-badge">string</span></td><td>工作地址</td></tr>
+          <tr><td class="param-name">labor_insurance_deduction_type</td><td><span class="type-badge">int</span></td><td>勞保自付額代扣類型：1=不代扣、2=臨時工、3=部分工時</td></tr>
+          <tr><td class="param-name">payment_method_id</td><td><span class="type-badge">int</span></td><td>付款渠道 ID：1=信用卡、3=ATM、4=企業用戶</td></tr>
+          <tr><td class="param-name">job_name</td><td><span class="type-badge">string</span></td><td>工作自訂名稱（最多 12 字）</td></tr>
+          <tr><td class="param-name">description</td><td><span class="type-badge">string</span></td><td>工作說明</td></tr>
+          <tr><td class="param-name">remarks</td><td><span class="type-badge">string</span></td><td>備注</td></tr>
+          <tr><td class="param-name">cover_photo</td><td><span class="type-badge">string</span></td><td>封面圖片 URL</td></tr>
+          <tr><td class="param-name">photos</td><td><span class="type-badge">array</span></td><td>環境照片 URL 清單</td></tr>
+          <tr><td class="param-name">skill_tags</td><td><span class="type-badge">array</span></td><td>技能標籤列表，例如 <code>[{"id":9,"text":"技能1"}]</code></td></tr>
+          <tr><td class="param-name">benefit_tags</td><td><span class="type-badge">array</span></td><td>福利標籤列表</td></tr>
+          <tr><td class="param-name">confirm_item</td><td><span class="type-badge">array</span></td><td>申請工作前確認事項</td></tr>
+          <tr><td class="param-name">contact_time</td><td><span class="type-badge">string</span></td><td>聯絡時間，例如 <code>14:00-18:00</code></td></tr>
+          <tr><td class="param-name">emergency_contact_phone</td><td><span class="type-badge">string</span></td><td>緊急聯絡電話</td></tr>
+          <tr><td class="param-name">match_target_favor</td><td><span class="type-badge">int</span></td><td>是否只媒合給最愛夥伴：0=否、1=是</td></tr>
+          <tr><td class="param-name">is_can_edit</td><td><span class="type-badge">bool</span></td><td>是否可編輯</td></tr>
+          <tr><td class="param-name">is_double_salary</td><td><span class="type-badge">int</span></td><td>是否雙薪：0=否、1=是</td></tr>
+          <tr><td class="param-name">work_date_list</td><td><span class="type-badge">array</span></td><td>工作日期清單，見 <code>work_date_list</code> 欄位說明</td></tr>
+        </table>
+      </div>
+      <div class="section-card" style="margin-top:16px">
+        <h3><code>work_date_list</code> 欄位說明</h3>
+        <table>
+          <tr><th>欄位名稱</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="param-name">start_at</td><td><span class="type-badge">int</span></td><td>工作開始時間戳</td></tr>
+          <tr><td class="param-name">status</td><td><span class="type-badge">int</span></td><td>狀態</td></tr>
+          <tr><td class="param-name">pay_status</td><td><span class="type-badge">int</span></td><td>付款狀態：0=未付款、1=已付款、2=付款中</td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="ji-ex" class="tab-panel">
+      <div class="section-card">
+        <h3>請求範例</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang">cURL</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre><span class="k">curl</span> -X GET \
+  <span class="s">"https://api.worky.tw/employer/shop/job/info?job_sn=16928729060001"</span> \
+  -H <span class="s">"Authorization: Bearer eyJhbGciOiJSUzI1NiJ9..."</span></pre>
+        </div>
+      </div>
+      <div class="section-card" style="margin-top:16px">
+        <h3>回應範例（成功）</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang">JSON Response</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre>{
+  <span class="k">"job_sn"</span>: <span class="s">"16928729060001"</span>,
+  <span class="k">"shop_id"</span>: <span class="n">110123</span>,
+  <span class="k">"job_type_level1"</span>: <span class="n">1</span>,
+  <span class="k">"job_type_level2"</span>: <span class="n">3</span>,
+  <span class="k">"job_type_level3"</span>: <span class="n">7</span>,
+  <span class="k">"status"</span>: <span class="n">1</span>,
+  <span class="k">"schedule_type"</span>: <span class="n">1</span>,
+  <span class="k">"start_at"</span>: <span class="n">1684195200</span>,
+  <span class="k">"end_at"</span>: <span class="n">1684231200</span>,
+  <span class="k">"start_date"</span>: <span class="n">20230516</span>,
+  <span class="k">"start_time_period"</span>: <span class="s">"08:00"</span>,
+  <span class="k">"end_time_period"</span>: <span class="s">"18:00"</span>,
+  <span class="k">"work_minutes"</span>: <span class="n">540</span>,
+  <span class="k">"rest_minutes"</span>: <span class="n">60</span>,
+  <span class="k">"recruit_count"</span>: <span class="n">10</span>,
+  <span class="k">"recruited_count"</span>: <span class="n">3</span>,
+  <span class="k">"hourly_wage"</span>: <span class="n">200</span>,
+  <span class="k">"show_hourly_wage"</span>: <span class="n">200</span>,
+  <span class="k">"address"</span>: <span class="s">"延平南路189號5樓"</span>,
+  <span class="k">"job_name"</span>: <span class="s">"週末外場幫手"</span>,
+  <span class="k">"is_can_edit"</span>: <span class="k">true</span>,
+  <span class="k">"is_double_salary"</span>: <span class="n">0</span>,
+  <span class="k">"payment_method_id"</span>: <span class="n">1</span>,
+  <span class="k">"work_date_list"</span>: [
+    { <span class="k">"start_at"</span>: <span class="n">1684195200</span>, <span class="k">"status"</span>: <span class="n">1</span>, <span class="k">"pay_status"</span>: <span class="n">0</span> }
+  ],
+  <span class="k">"skill_tags"</span>: [{ <span class="k">"id"</span>: <span class="n">9</span>, <span class="k">"text"</span>: <span class="s">"技能1"</span> }],
+  <span class="k">"benefit_tags"</span>: [{ <span class="k">"id"</span>: <span class="n">12</span>, <span class="k">"text"</span>: <span class="s">"福利1"</span> }]
+}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- ══════════════ API: job-schedule ══════════════ -->
+  <div id="page-job-schedule" class="api-page content-wrap">
+    <div class="api-header">
+      <div class="breadcrumb">工作查詢 API <span>›</span> 日程列表</div>
+      <h1>日程列表</h1>
+      <div class="endpoint">
+        <span class="method" style="color:var(--tag-get)">GET</span>
+        <span class="url">/employer/shop/schedule/list</span>
+      </div>
+      <div class="desc">查詢指定店鋪的工作日程列表，依日期分組回傳，可依日期區間與狀態篩選。</div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'js-req')">請求參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'js-res')">回應參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'js-ex')">範例</button>
+    </div>
+    <div id="js-req" class="tab-panel active">
+      <div class="notice">需帶入 Access Token（Bearer）於 Authorization Header。</div>
+      <div class="section-card">
+        <h3>Query 參數</h3>
+        <table>
+          <tr><th>參數名稱</th><th>類型</th><th>必填</th><th>說明</th></tr>
+          <tr><td class="param-name">shop_id</td><td><span class="type-badge">int</span></td><td><span class="required">必填</span></td><td>店鋪 ID，例如 <code>110123</code></td></tr>
+          <tr><td class="param-name">search_start_date</td><td><span class="type-badge">int</span></td><td><span class="optional">選填</span></td><td>搜尋開始日期（YYYYMMDD），空值表示當天，例如 <code>20230901</code></td></tr>
+          <tr><td class="param-name">search_end_date</td><td><span class="type-badge">int</span></td><td><span class="optional">選填</span></td><td>搜尋結束日期（YYYYMMDD），例如 <code>20230930</code></td></tr>
+          <tr><td class="param-name">status</td><td><span class="type-badge">int</span></td><td><span class="optional">選填</span></td><td>狀態篩選：0=全部（預設）、1=已結束</td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="js-res" class="tab-panel">
+      <div class="section-card">
+        <h3>成功回應欄位</h3>
+        <table>
+          <tr><th>欄位名稱</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="param-name">count</td><td><span class="type-badge">int</span></td><td>工作總數</td></tr>
+          <tr><td class="param-name">items</td><td><span class="type-badge">object</span></td><td>以日期 <code>YYYYMMDD</code> 為 key 分組的工作清單</td></tr>
+        </table>
+      </div>
+      <div class="section-card" style="margin-top:16px">
+        <h3><code>items[date]</code> 子欄位說明</h3>
+        <table>
+          <tr><th>欄位名稱</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="param-name">job_sn</td><td><span class="type-badge">string</span></td><td>工作單號</td></tr>
+          <tr><td class="param-name">job_type</td><td><span class="type-badge">string</span></td><td>工作類型描述，例如 <code>外場服務員 - 接待</code></td></tr>
+          <tr><td class="param-name">schedule_type</td><td><span class="type-badge">int</span></td><td>區段類型：1=單日、2=多日</td></tr>
+          <tr><td class="param-name">start_at</td><td><span class="type-badge">int</span></td><td>工作開始時間戳</td></tr>
+          <tr><td class="param-name">end_at</td><td><span class="type-badge">int</span></td><td>工作結束時間戳</td></tr>
+          <tr><td class="param-name">recruit_count</td><td><span class="type-badge">int</span></td><td>招募人數</td></tr>
+          <tr><td class="param-name">recruited_count</td><td><span class="type-badge">int</span></td><td>已招募人數</td></tr>
+          <tr><td class="param-name">job_name</td><td><span class="type-badge">string</span></td><td>工作自訂名稱</td></tr>
+          <tr><td class="param-name">group_id</td><td><span class="type-badge">string</span></td><td>批次編號</td></tr>
+          <tr><td class="param-name">hourly_wage</td><td><span class="type-badge">int</span></td><td>時薪</td></tr>
+          <tr><td class="param-name">show_hourly_wage</td><td><span class="type-badge">int</span></td><td>顯示時薪</td></tr>
+          <tr><td class="param-name">job_order_status</td><td><span class="type-badge">int|void</span></td><td>工單狀態：0=未發佈、1=媒合中、10=處理中、11=等待付款、12=已付款、31=已取消（企業支付工作不回傳）</td></tr>
+          <tr><td class="param-name">labors</td><td><span class="type-badge">array</span></td><td>確定上工的打工夥伴清單，見 <code>labors</code> 欄位說明</td></tr>
+        </table>
+      </div>
+      <div class="section-card" style="margin-top:16px">
+        <h3><code>labors</code> 欄位說明</h3>
+        <table>
+          <tr><th>欄位名稱</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="param-name">labor_id</td><td><span class="type-badge">int</span></td><td>打工夥伴 ID</td></tr>
+          <tr><td class="param-name">picture</td><td><span class="type-badge">string</span></td><td>大頭照圖片 URL</td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="js-ex" class="tab-panel">
+      <div class="section-card">
+        <h3>請求範例</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang">cURL</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre><span class="k">curl</span> -X GET \
+  <span class="s">"https://api.worky.tw/employer/shop/schedule/list?shop_id=110123&search_start_date=20230901&search_end_date=20230930"</span> \
+  -H <span class="s">"Authorization: Bearer eyJhbGciOiJSUzI1NiJ9..."</span></pre>
+        </div>
+      </div>
+      <div class="section-card" style="margin-top:16px">
+        <h3>回應範例（成功）</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang">JSON Response</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre>{
+  <span class="k">"count"</span>: <span class="n">1</span>,
+  <span class="k">"items"</span>: {
+    <span class="k">"20230516"</span>: [
+      {
+        <span class="k">"job_sn"</span>: <span class="s">"16928729060001"</span>,
+        <span class="k">"job_type"</span>: <span class="s">"外場服務員 - 接待"</span>,
+        <span class="k">"schedule_type"</span>: <span class="n">1</span>,
+        <span class="k">"start_at"</span>: <span class="n">1684195200</span>,
+        <span class="k">"end_at"</span>: <span class="n">1684231200</span>,
+        <span class="k">"recruit_count"</span>: <span class="n">10</span>,
+        <span class="k">"recruited_count"</span>: <span class="n">3</span>,
+        <span class="k">"job_name"</span>: <span class="s">"週末外場幫手"</span>,
+        <span class="k">"hourly_wage"</span>: <span class="n">200</span>,
+        <span class="k">"show_hourly_wage"</span>: <span class="n">200</span>,
+        <span class="k">"job_order_status"</span>: <span class="n">1</span>,
+        <span class="k">"labors"</span>: [
+          { <span class="k">"labor_id"</span>: <span class="n">870</span>, <span class="k">"picture"</span>: <span class="s">"https://dummyimage.com/200x200"</span> }
+        ]
+      }
+    ]
+  }
+}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- ══════════════ API: job-match-list ══════════════ -->
+  <div id="page-job-match-list" class="api-page content-wrap">
+    <div class="api-header">
+      <div class="breadcrumb">工作查詢 API <span>›</span> 媒合列表</div>
+      <h1>媒合列表</h1>
+      <div class="endpoint">
+        <span class="method" style="color:var(--tag-get)">GET</span>
+        <span class="url">/employer/shop/job-match/list</span>
+      </div>
+      <div class="desc">查詢店鋪的工作媒合列表，回傳每筆工作的媒合狀態、打工夥伴清單、付款狀態等資訊。支援分頁查詢。</div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'jm-req')">請求參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'jm-res')">回應參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'jm-ex')">範例</button>
+    </div>
+    <div id="jm-req" class="tab-panel active">
+      <div class="notice">需帶入 Access Token（Bearer）於 Authorization Header。<code>page</code> 與 <code>limit</code> 不傳則查詢全部。</div>
+      <div class="section-card">
+        <h3>Query 參數</h3>
+        <table>
+          <tr><th>參數名稱</th><th>類型</th><th>必填</th><th>說明</th></tr>
+          <tr><td class="param-name">page</td><td><span class="type-badge">int</span></td><td><span class="optional">選填</span></td><td>當前頁碼，不傳則查詢全部，例如 <code>1</code></td></tr>
+          <tr><td class="param-name">limit</td><td><span class="type-badge">int</span></td><td><span class="optional">選填</span></td><td>每頁筆數，不傳則查詢全部，例如 <code>10</code></td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="jm-res" class="tab-panel">
+      <div class="section-card">
+        <h3>成功回應欄位</h3>
+        <table>
+          <tr><th>欄位名稱</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="param-name">count</td><td><span class="type-badge">int</span></td><td>媒合工作總數</td></tr>
+          <tr><td class="param-name">items</td><td><span class="type-badge">object[]</span></td><td>媒合清單，見 <code>items</code> 欄位說明</td></tr>
+        </table>
+      </div>
+      <div class="section-card" style="margin-top:16px">
+        <h3><code>items</code> 欄位說明</h3>
+        <table>
+          <tr><th>欄位名稱</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="param-name">job_sn</td><td><span class="type-badge">string</span></td><td>工作單號</td></tr>
+          <tr><td class="param-name">job_type</td><td><span class="type-badge">string</span></td><td>工作類型描述，例如 <code>外場服務員 - 接待</code></td></tr>
+          <tr><td class="param-name">schedule_type</td><td><span class="type-badge">int</span></td><td>區段類型：1=單日、2=多日</td></tr>
+          <tr><td class="param-name">start_at</td><td><span class="type-badge">int</span></td><td>工作開始時間戳</td></tr>
+          <tr><td class="param-name">end_at</td><td><span class="type-badge">int</span></td><td>工作結束時間戳</td></tr>
+          <tr><td class="param-name">work_date_list</td><td><span class="type-badge">array</span></td><td>工作日期清單，見 <code>work_date_list</code> 欄位說明</td></tr>
+          <tr><td class="param-name">recruit_count</td><td><span class="type-badge">int</span></td><td>招募人數</td></tr>
+          <tr><td class="param-name">recruited_count</td><td><span class="type-badge">int</span></td><td>已招募人數</td></tr>
+          <tr><td class="param-name">recruit_deadline</td><td><span class="type-badge">int</span></td><td>招募截止時間戳</td></tr>
+          <tr><td class="param-name">apply_labor_count</td><td><span class="type-badge">int</span></td><td>申請上工的打工夥伴數量</td></tr>
+          <tr><td class="param-name">match_target</td><td><span class="type-badge">array</span></td><td>媒合對象類型清單</td></tr>
+          <tr><td class="param-name">red_dot</td><td><span class="type-badge">int</span></td><td>紅點提示：0=無、1=有</td></tr>
+          <tr><td class="param-name">pay_status</td><td><span class="type-badge">int</span></td><td>付款狀態：0=未付款、1=已付款、2=付款中</td></tr>
+          <tr><td class="param-name">job_order_status</td><td><span class="type-badge">int|void</span></td><td>工單狀態：0=未發佈、1=媒合中、10=處理中、11=等待付款、12=已付款、31=已取消（企業支付不回傳）</td></tr>
+          <tr><td class="param-name">hourly_wage</td><td><span class="type-badge">int</span></td><td>時薪</td></tr>
+          <tr><td class="param-name">show_hourly_wage</td><td><span class="type-badge">int</span></td><td>顯示時薪</td></tr>
+          <tr><td class="param-name">job_name</td><td><span class="type-badge">string</span></td><td>工作自訂名稱</td></tr>
+          <tr><td class="param-name">labors</td><td><span class="type-badge">array</span></td><td>確定上工的打工夥伴，見 <code>labors</code> 欄位說明</td></tr>
+        </table>
+      </div>
+      <div class="section-card" style="margin-top:16px">
+        <h3><code>work_date_list</code> 欄位說明</h3>
+        <table>
+          <tr><th>欄位名稱</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="param-name">start_at</td><td><span class="type-badge">int</span></td><td>工作開始時間戳</td></tr>
+          <tr><td class="param-name">status</td><td><span class="type-badge">int</span></td><td>狀態</td></tr>
+          <tr><td class="param-name">pay_status</td><td><span class="type-badge">int</span></td><td>付款狀態：0=未付款、1=已付款、2=付款中</td></tr>
+        </table>
+      </div>
+      <div class="section-card" style="margin-top:16px">
+        <h3><code>labors</code> 欄位說明</h3>
+        <table>
+          <tr><th>欄位名稱</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="param-name">labor_id</td><td><span class="type-badge">int</span></td><td>打工夥伴 ID</td></tr>
+          <tr><td class="param-name">picture</td><td><span class="type-badge">string</span></td><td>大頭照圖片 URL</td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="jm-ex" class="tab-panel">
+      <div class="section-card">
+        <h3>請求範例</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang">cURL</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre><span class="k">curl</span> -X GET \
+  <span class="s">"https://api.worky.tw/employer/shop/job-match/list?page=1&limit=10"</span> \
+  -H <span class="s">"Authorization: Bearer eyJhbGciOiJSUzI1NiJ9..."</span></pre>
+        </div>
+      </div>
+      <div class="section-card" style="margin-top:16px">
+        <h3>回應範例（成功）</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang">JSON Response</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre>{
+  <span class="k">"count"</span>: <span class="n">1</span>,
+  <span class="k">"items"</span>: [
+    {
+      <span class="k">"job_sn"</span>: <span class="s">"16928729060001"</span>,
+      <span class="k">"job_type"</span>: <span class="s">"外場服務員 - 點餐送餐"</span>,
+      <span class="k">"schedule_type"</span>: <span class="n">1</span>,
+      <span class="k">"start_at"</span>: <span class="n">1684195200</span>,
+      <span class="k">"end_at"</span>: <span class="n">1684231200</span>,
+      <span class="k">"recruit_count"</span>: <span class="n">10</span>,
+      <span class="k">"recruited_count"</span>: <span class="n">2</span>,
+      <span class="k">"apply_labor_count"</span>: <span class="n">5</span>,
+      <span class="k">"red_dot"</span>: <span class="n">0</span>,
+      <span class="k">"pay_status"</span>: <span class="n">0</span>,
+      <span class="k">"job_order_status"</span>: <span class="n">1</span>,
+      <span class="k">"hourly_wage"</span>: <span class="n">183</span>,
+      <span class="k">"show_hourly_wage"</span>: <span class="n">183</span>,
+      <span class="k">"job_name"</span>: <span class="s">"週末外場幫手"</span>,
+      <span class="k">"work_date_list"</span>: [
+        { <span class="k">"start_at"</span>: <span class="n">1684195200</span>, <span class="k">"status"</span>: <span class="n">1</span>, <span class="k">"pay_status"</span>: <span class="n">0</span> }
+      ],
+      <span class="k">"labors"</span>: [
+        { <span class="k">"labor_id"</span>: <span class="n">870</span>, <span class="k">"picture"</span>: <span class="s">"https://dummyimage.com/200x200"</span> },
+        { <span class="k">"labor_id"</span>: <span class="n">869</span>, <span class="k">"picture"</span>: <span class="s">"https://dummyimage.com/200x200"</span> }
+      ]
+    }
+  ]
+}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- ══════════════ API: checkout-create ══════════════ -->
+  <div id="page-checkout-create" class="api-page content-wrap">
+    <div class="api-header">
+      <div class="breadcrumb">結帳模組 <span>›</span> 建立結帳訂單</div>
+      <h1>建立結帳訂單</h1>
+      <div class="endpoint">
+        <span class="method">POST</span>
+        <span class="url">/v1/checkout/create</span>
+      </div>
+      <div class="desc">呼叫此 API 以建立一筆新的結帳訂單，並取得結帳頁面的導向 URL。商家需在有效期限內引導消費者前往完成支付。</div>
+    </div>
+ 
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'req-params-1')">請求參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'res-params-1')">回應參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'errors-1')">錯誤碼</button>
+      <button class="tab-btn" onclick="switchTab(this,'examples-1')">範例</button>
+    </div>
+ 
+    <div id="req-params-1" class="tab-panel active">
+      <div class="notice">所有請求須在 Header 帶入 <code>Authorization: Bearer {access_token}</code> 及 <code>Content-Type: application/json</code></div>
+      <div class="section-card">
+        <h3>Header 參數</h3>
+        <table>
+          <tr><th>參數名稱</th><th>類型</th><th>必填</th><th>說明</th></tr>
+          <tr><td class="param-name">Authorization</td><td><span class="type-badge">string</span></td><td><span class="required">必填</span></td><td>Bearer Token 驗證</td></tr>
+          <tr><td class="param-name">Content-Type</td><td><span class="type-badge">string</span></td><td><span class="required">必填</span></td><td>application/json</td></tr>
+          <tr><td class="param-name">X-Merchant-ID</td><td><span class="type-badge">string</span></td><td><span class="required">必填</span></td><td>商家識別碼</td></tr>
+        </table>
+      </div>
+      <div class="section-card">
+        <h3>Body 參數</h3>
+        <table>
+          <tr><th>參數名稱</th><th>類型</th><th>必填</th><th>說明</th></tr>
+          <tr><td class="param-name">order_id</td><td><span class="type-badge">string</span></td><td><span class="required">必填</span></td><td>商家訂單編號，需唯一，最長 64 字元</td></tr>
+          <tr><td class="param-name">amount</td><td><span class="type-badge">integer</span></td><td><span class="required">必填</span></td><td>交易金額（新台幣，最小 1 元）</td></tr>
+          <tr><td class="param-name">currency</td><td><span class="type-badge">string</span></td><td><span class="required">必填</span></td><td>幣別代碼，固定填入 <code>TWD</code></td></tr>
+          <tr><td class="param-name">item_name</td><td><span class="type-badge">string</span></td><td><span class="required">必填</span></td><td>商品名稱，最長 100 字元</td></tr>
+          <tr><td class="param-name">return_url</td><td><span class="type-badge">string</span></td><td><span class="required">必填</span></td><td>付款完成後導向的商家 URL</td></tr>
+          <tr><td class="param-name">notify_url</td><td><span class="type-badge">string</span></td><td><span class="optional">選填</span></td><td>Webhook 通知 URL（如未填則使用預設）</td></tr>
+          <tr><td class="param-name">expire_minutes</td><td><span class="type-badge">integer</span></td><td><span class="optional">選填</span></td><td>訂單有效分鐘數，預設 30，最大 1440</td></tr>
+          <tr><td class="param-name">memo</td><td><span class="type-badge">string</span></td><td><span class="optional">選填</span></td><td>備註欄位，最長 200 字元</td></tr>
+        </table>
+      </div>
+    </div>
+ 
+    <div id="res-params-1" class="tab-panel">
+      <div class="section-card">
+        <h3>成功回應 (HTTP 200)</h3>
+        <table>
+          <tr><th>欄位名稱</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="param-name">code</td><td><span class="type-badge">string</span></td><td><code>0000</code> 表示成功</td></tr>
+          <tr><td class="param-name">message</td><td><span class="type-badge">string</span></td><td>回應說明文字</td></tr>
+          <tr><td class="param-name">data.checkout_id</td><td><span class="type-badge">string</span></td><td>平台產生的結帳識別碼</td></tr>
+          <tr><td class="param-name">data.checkout_url</td><td><span class="type-badge">string</span></td><td>導向消費者完成支付的 URL</td></tr>
+          <tr><td class="param-name">data.expire_at</td><td><span class="type-badge">string</span></td><td>訂單到期時間（ISO 8601 格式）</td></tr>
+          <tr><td class="param-name">data.order_id</td><td><span class="type-badge">string</span></td><td>原始商家訂單編號（回傳確認）</td></tr>
+        </table>
+      </div>
+    </div>
+ 
+    <div id="errors-1" class="tab-panel">
+      <div class="section-card">
+        <h3>錯誤碼列表</h3>
+        <table>
+          <tr><th>錯誤碼</th><th>HTTP 狀態</th><th>說明</th><th>處理建議</th></tr>
+          <tr><td class="error-code">0000</td><td>200</td><td>成功</td><td>—</td></tr>
+          <tr><td class="error-code">1001</td><td>401</td><td>Token 無效或已過期</td><td>重新取得 access_token 後重試</td></tr>
+          <tr><td class="error-code">1002</td><td>403</td><td>商家無此操作權限</td><td>確認商家帳號狀態及權限設定</td></tr>
+          <tr><td class="error-code">2001</td><td>400</td><td>訂單編號重複</td><td>使用不同的 order_id 重新建立</td></tr>
+          <tr><td class="error-code">2002</td><td>400</td><td>金額格式錯誤</td><td>確認 amount 為正整數</td></tr>
+          <tr><td class="error-code">2003</td><td>400</td><td>必填欄位缺漏</td><td>檢查 order_id、amount、currency、item_name、return_url</td></tr>
+          <tr><td class="error-code">2010</td><td>400</td><td>return_url 格式無效</td><td>確認為合法的 HTTPS URL</td></tr>
+          <tr><td class="error-code">5001</td><td>500</td><td>系統內部錯誤</td><td>請稍後重試；若持續發生請聯繫技術支援</td></tr>
+        </table>
+      </div>
+    </div>
+ 
+    <div id="examples-1" class="tab-panel">
+      <div class="section-card">
+        <h3>請求範例</h3>
+        <div class="code-block">
+          <div class="code-block-header">
+            <span class="lang">JSON Request</span>
+            <button class="copy-btn" onclick="copyCode(this)">複製</button>
+          </div>
+          <pre><span class="c">// POST /v1/checkout/create</span>
+<span class="c">// Headers:</span>
+<span class="c">//   Authorization: Bearer eyJhbGciOiJSUzI1NiJ9...</span>
+<span class="c">//   Content-Type: application/json</span>
+<span class="c">//   X-Merchant-ID: MERCHANT_001</span>
+ 
+{
+  <span class="k">"order_id"</span>: <span class="s">"ORD-20240611-00001"</span>,
+  <span class="k">"amount"</span>: <span class="n">1500</span>,
+  <span class="k">"currency"</span>: <span class="s">"TWD"</span>,
+  <span class="k">"item_name"</span>: <span class="s">"商品名稱範例"</span>,
+  <span class="k">"return_url"</span>: <span class="s">"https://yourshop.com/payment/result"</span>,
+  <span class="k">"notify_url"</span>: <span class="s">"https://yourshop.com/webhook/payment"</span>,
+  <span class="k">"expire_minutes"</span>: <span class="n">30</span>,
+  <span class="k">"memo"</span>: <span class="s">"測試訂單備註"</span>
+}</pre>
+        </div>
+      </div>
+      <div class="section-card" style="margin-top:16px">
+        <h3>回應範例 (成功)</h3>
+        <div class="code-block">
+          <div class="code-block-header">
+            <span class="lang">JSON Response</span>
+            <button class="copy-btn" onclick="copyCode(this)">複製</button>
+          </div>
+          <pre>{
+  <span class="k">"code"</span>: <span class="s">"0000"</span>,
+  <span class="k">"message"</span>: <span class="s">"success"</span>,
+  <span class="k">"data"</span>: {
+    <span class="k">"checkout_id"</span>: <span class="s">"CHK-20240611-A8F2K1"</span>,
+    <span class="k">"checkout_url"</span>: <span class="s">"https://checkout.platform.com/pay/CHK-20240611-A8F2K1"</span>,
+    <span class="k">"expire_at"</span>: <span class="s">"2024-06-11T12:30:00+08:00"</span>,
+    <span class="k">"order_id"</span>: <span class="s">"ORD-20240611-00001"</span>
+  }
+}</pre>
+        </div>
+      </div>
+      <div class="section-card" style="margin-top:16px">
+        <h3>回應範例 (失敗)</h3>
+        <div class="code-block">
+          <div class="code-block-header">
+            <span class="lang">JSON Response</span>
+            <button class="copy-btn" onclick="copyCode(this)">複製</button>
+          </div>
+          <pre>{
+  <span class="k">"code"</span>: <span class="s">"2001"</span>,
+  <span class="k">"message"</span>: <span class="s">"Order ID already exists"</span>,
+  <span class="k">"data"</span>: <span class="n">null</span>
+}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- ══════════════ API: tx-query ══════════════ -->
+  <div id="page-tx-query" class="api-page content-wrap">
+    <div class="api-header">
+      <div class="breadcrumb">交易管理 API <span>›</span> 查詢交易明細</div>
+      <h1>查詢交易明細</h1>
+      <div class="endpoint">
+        <span class="method" style="color:var(--tag-get)">GET</span>
+        <span class="url">/v1/transaction/{transaction_id}</span>
+      </div>
+      <div class="desc">依照平台交易識別碼查詢該筆交易的詳細資訊，包含交易狀態、金額、時間戳記及相關資料。</div>
+    </div>
+ 
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'tq-req')">請求參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'tq-res')">回應參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'tq-err')">錯誤碼</button>
+      <button class="tab-btn" onclick="switchTab(this,'tq-ex')">範例</button>
+    </div>
+ 
+    <div id="tq-req" class="tab-panel active">
+      <div class="section-card">
+        <h3>Path 參數</h3>
+        <table>
+          <tr><th>參數名稱</th><th>類型</th><th>必填</th><th>說明</th></tr>
+          <tr><td class="param-name">transaction_id</td><td><span class="type-badge">string</span></td><td><span class="required">必填</span></td><td>平台交易識別碼</td></tr>
+        </table>
+      </div>
+      <div class="section-card">
+        <h3>Query 參數</h3>
+        <table>
+          <tr><th>參數名稱</th><th>類型</th><th>必填</th><th>說明</th></tr>
+          <tr><td class="param-name">merchant_id</td><td><span class="type-badge">string</span></td><td><span class="required">必填</span></td><td>商家識別碼（需與 Token 商家相符）</td></tr>
+        </table>
+      </div>
+    </div>
+ 
+    <div id="tq-res" class="tab-panel">
+      <div class="section-card">
+        <h3>成功回應欄位</h3>
+        <table>
+          <tr><th>欄位名稱</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="param-name">data.transaction_id</td><td><span class="type-badge">string</span></td><td>平台交易識別碼</td></tr>
+          <tr><td class="param-name">data.order_id</td><td><span class="type-badge">string</span></td><td>原始商家訂單編號</td></tr>
+          <tr><td class="param-name">data.status</td><td><span class="type-badge">string</span></td><td>交易狀態（詳見狀態表）</td></tr>
+          <tr><td class="param-name">data.amount</td><td><span class="type-badge">integer</span></td><td>交易金額</td></tr>
+          <tr><td class="param-name">data.currency</td><td><span class="type-badge">string</span></td><td>幣別</td></tr>
+          <tr><td class="param-name">data.created_at</td><td><span class="type-badge">string</span></td><td>建立時間（ISO 8601）</td></tr>
+          <tr><td class="param-name">data.updated_at</td><td><span class="type-badge">string</span></td><td>最後更新時間（ISO 8601）</td></tr>
+          <tr><td class="param-name">data.completed_at</td><td><span class="type-badge">string</span></td><td>完成時間，未完成時為 null</td></tr>
+        </table>
+      </div>
+      <div class="section-card" style="margin-top:16px">
+        <h3>交易狀態代碼</h3>
+        <table>
+          <tr><th>狀態碼</th><th>說明</th></tr>
+          <tr><td class="param-name">PENDING</td><td>待付款，消費者尚未完成付款</td></tr>
+          <tr><td class="param-name">PROCESSING</td><td>處理中，OTP 驗證進行中</td></tr>
+          <tr><td class="param-name">SUCCESS</td><td>交易成功</td></tr>
+          <tr><td class="param-name">FAILED</td><td>交易失敗</td></tr>
+          <tr><td class="param-name">CANCELLED</td><td>已取消</td></tr>
+          <tr><td class="param-name">EXPIRED</td><td>訂單已逾期</td></tr>
+          <tr><td class="param-name">REFUNDED</td><td>已退款</td></tr>
+        </table>
+      </div>
+    </div>
+ 
+    <div id="tq-err" class="tab-panel">
+      <div class="section-card">
+        <h3>錯誤碼列表</h3>
+        <table>
+          <tr><th>錯誤碼</th><th>HTTP 狀態</th><th>說明</th></tr>
+          <tr><td class="error-code">0000</td><td>200</td><td>成功</td></tr>
+          <tr><td class="error-code">1001</td><td>401</td><td>Token 無效或已過期</td></tr>
+          <tr><td class="error-code">3001</td><td>404</td><td>查無此交易識別碼</td></tr>
+          <tr><td class="error-code">3002</td><td>403</td><td>無權查詢此交易（商家不符）</td></tr>
+          <tr><td class="error-code">5001</td><td>500</td><td>系統內部錯誤</td></tr>
+        </table>
+      </div>
+    </div>
+ 
+    <div id="tq-ex" class="tab-panel">
+      <div class="section-card">
+        <h3>請求範例</h3>
+        <div class="code-block">
+          <div class="code-block-header">
+            <span class="lang">cURL</span>
+            <button class="copy-btn" onclick="copyCode(this)">複製</button>
+          </div>
+          <pre><span class="k">curl</span> -X GET \
+  <span class="s">"https://api.platform.com/v1/transaction/TXN-20240611-X9P3"</span> \
+  -H <span class="s">"Authorization: Bearer eyJhbGciOiJSUzI1NiJ9..."</span> \
+  -H <span class="s">"Content-Type: application/json"</span> \
+  -G --data-urlencode <span class="s">"merchant_id=MERCHANT_001"</span></pre>
+        </div>
+      </div>
+      <div class="section-card" style="margin-top:16px">
+        <h3>回應範例</h3>
+        <div class="code-block">
+          <div class="code-block-header">
+            <span class="lang">JSON Response</span>
+            <button class="copy-btn" onclick="copyCode(this)">複製</button>
+          </div>
+          <pre>{
+  <span class="k">"code"</span>: <span class="s">"0000"</span>,
+  <span class="k">"message"</span>: <span class="s">"success"</span>,
+  <span class="k">"data"</span>: {
+    <span class="k">"transaction_id"</span>: <span class="s">"TXN-20240611-X9P3"</span>,
+    <span class="k">"order_id"</span>: <span class="s">"ORD-20240611-00001"</span>,
+    <span class="k">"status"</span>: <span class="s">"SUCCESS"</span>,
+    <span class="k">"amount"</span>: <span class="n">1500</span>,
+    <span class="k">"currency"</span>: <span class="s">"TWD"</span>,
+    <span class="k">"created_at"</span>: <span class="s">"2024-06-11T12:00:00+08:00"</span>,
+    <span class="k">"updated_at"</span>: <span class="s">"2024-06-11T12:04:32+08:00"</span>,
+    <span class="k">"completed_at"</span>: <span class="s">"2024-06-11T12:04:32+08:00"</span>
+  }
+}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- ══════════════ API: account-register ══════════════ -->
+  <div id="page-account-register" class="api-page content-wrap">
+    <div class="api-header">
+      <div class="breadcrumb">帳號建立 API <span>›</span> 建立帳號</div>
+      <h1>商家註冊</h1>
+      <div class="endpoint">
+        <span class="method" style="color:var(--tag-post)">POST</span>
+        <span class="url">/employer/register</span>
+      </div>
+      <div class="desc">以商家手機號碼在 Worky 建立帳號。呼叫後系統將自動發送 OTP 驗證碼至指定手機，需接續呼叫「確認註冊驗證碼」API 完成帳號啟用，方可進行後續操作。</div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'ar-req')">請求參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'ar-res')">回應參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'ar-err')">錯誤碼</button>
+      <button class="tab-btn" onclick="switchTab(this,'ar-ex')">範例</button>
+    </div>
+    <div id="ar-req" class="tab-panel active">
+      <div class="notice">不需要帶 Access Token。發送後系統將簡訊推送驗證碼至指定手機，需在有效期限內呼叫「確認註冊驗證碼」完成帳號啟用。</div>
+      <div class="section-card">
+        <h3>Body 參數</h3>
+        <table>
+          <tr><th>參數名稱</th><th>類型</th><th>必填</th><th>說明</th></tr>
+          <tr><td class="param-name">phone</td><td><span class="type-badge">string</span></td><td><span class="required">必填</span></td><td>登入用的手機號碼（不含國碼），例如 <code>0910123456</code> 或 <code>910123456</code></td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="ar-res" class="tab-panel">
+      <div class="section-card">
+        <h3>成功回應欄位</h3>
+        <table>
+          <tr><th>欄位名稱</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="param-name">codeTTL</td><td><span class="type-badge">int</span></td><td>驗證碼有效時間（秒），例如 <code>300</code></td></tr>
+          <tr><td class="param-name">interval</td><td><span class="type-badge">int</span></td><td>驗證碼發送間隔時間（秒），例如 <code>60</code></td></tr>
+          <tr><td class="param-name">code</td><td><span class="type-badge">string</span></td><td>驗證碼（<strong>僅測試環境回傳</strong>），例如 <code>7128</code></td></tr>
+        </table>
+      </div>
+      <div class="section-card" style="margin-top:16px">
+        <h3>錯誤情境額外回應欄位（驗證碼已產生）</h3>
+        <table>
+          <tr><th>欄位名稱</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="param-name">time</td><td><span class="type-badge">int</span></td><td>已產生驗證碼的剩餘有效秒數，需等歸零後才能重新產生</td></tr>
+          <tr><td class="param-name">expiredAt</td><td><span class="type-badge">int</span></td><td>驗證碼過期時間戳</td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="ar-err" class="tab-panel">
+      <div class="section-card">
+        <h3>常見錯誤情境</h3>
+        <table>
+          <tr><th>情境</th><th>說明</th></tr>
+          <tr><td class="param-name">驗證碼已產生</td><td>回傳 <code>time</code>（剩餘秒數）與 <code>expiredAt</code>（過期時間戳），需等待後才能重新發送</td></tr>
+          <tr><td class="param-name">輸入驗證碼錯誤 X 次</td><td>回傳 <code>invalidCodeCount</code>（錯誤次數）、<code>invalidCodeCountExpiredTime</code>（等待秒數）、<code>expiredAt</code></td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="ar-ex" class="tab-panel">
+      <div class="section-card">
+        <h3>請求範例</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang">JSON Request</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre><span class="c">// POST /employer/register</span>
+{
+  <span class="k">"phone"</span>: <span class="s">"0910123456"</span>
+}</pre>
+        </div>
+      </div>
+      <div class="section-card" style="margin-top:16px">
+        <h3>回應範例（成功）</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang">JSON Response</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre>{
+  <span class="k">"codeTTL"</span>: <span class="n">300</span>,
+  <span class="k">"interval"</span>: <span class="n">60</span>
+}</pre>
+        </div>
+      </div>
+      <div class="section-card" style="margin-top:16px">
+        <h3>回應範例（驗證碼已產生錯誤時）</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang">JSON Response</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre>{
+  <span class="k">"time"</span>: <span class="n">123</span>,
+  <span class="k">"expiredAt"</span>: <span class="n">1713249747</span>
+}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- ══════════════ API: account-verify ══════════════ -->
+  <div id="page-account-verify" class="api-page content-wrap">
+    <div class="api-header">
+      <div class="breadcrumb">帳號建立 API <span>›</span> 確認註冊驗證碼</div>
+      <h1>確認註冊驗證碼</h1>
+      <div class="endpoint">
+        <span class="method" style="color:var(--tag-post)">POST</span>
+        <span class="url">/employer/register/confirm</span>
+      </div>
+      <div class="desc">商家收到簡訊驗證碼後，提交驗證碼（MD5雜湊值）完成帳號啟用。驗證成功後回傳 Access Token 與 Refresh Token，即可開始進行後續 API 操作。</div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'av-req')">請求參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'av-res')">回應參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'av-err')">錯誤碼</button>
+      <button class="tab-btn" onclick="switchTab(this,'av-ex')">範例</button>
+    </div>
+    <div id="av-req" class="tab-panel active">
+      <div class="notice">不需要帶 Access Token。驗證碼須先以 MD5 雜湊後傳入 <code>password</code> 欄位。</div>
+      <div class="section-card">
+        <h3>Body 參數</h3>
+        <table>
+          <tr><th>參數名稱</th><th>類型</th><th>必填</th><th>說明</th></tr>
+          <tr><td class="param-name">phone</td><td><span class="type-badge">string</span></td><td><span class="required">必填</span></td><td>登入用的手機號碼（不含國碼），例如 <code>0910123456</code></td></tr>
+          <tr><td class="param-name">password</td><td><span class="type-badge">string(32)</span></td><td><span class="required">必填</span></td><td>驗證碼雜湊值（從手機簡訊獲取的驗證碼進行 MD5 後的雜湊值），例如 <code>3858f62230ac3c915f300c664312c63f</code></td></tr>
+          <tr><td class="param-name">notify_device_token</td><td><span class="type-badge">string</span></td><td><span class="optional">選填</span></td><td>用於 iOS / Android Notification 服務的 device token</td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="av-res" class="tab-panel">
+      <div class="section-card">
+        <h3>成功回應欄位</h3>
+        <table>
+          <tr><th>欄位名稱</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="param-name">accessToken</td><td><span class="type-badge">string</span></td><td>身分驗證用的 Access Token，有效期限 1 小時</td></tr>
+          <tr><td class="param-name">accessTokenExpiredAt</td><td><span class="type-badge">int</span></td><td>Access Token 失效的時間戳，例如 <code>1686658173</code></td></tr>
+          <tr><td class="param-name">refreshToken</td><td><span class="type-badge">string</span></td><td>Refresh Token，有效期限 30 天，可用於取得新的 Token 對</td></tr>
+          <tr><td class="param-name">refreshTokenExpiredAt</td><td><span class="type-badge">int</span></td><td>Refresh Token 失效的時間戳</td></tr>
+        </table>
+      </div>
+      <div class="section-card" style="margin-top:16px">
+        <h3>錯誤情境額外回應（驗證碼錯誤時）</h3>
+        <table>
+          <tr><th>欄位名稱</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="param-name">invalidCodeCount</td><td><span class="type-badge">int</span></td><td>驗證碼輸入錯誤的累計次數</td></tr>
+          <tr><td class="param-name">invalidCodeCountExpiredTime</td><td><span class="type-badge">int</span></td><td>可再次輸入驗證碼的等待秒數</td></tr>
+          <tr><td class="param-name">expiredAt</td><td><span class="type-badge">int</span></td><td>可再次產生新驗證碼的過期時間戳</td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="av-err" class="tab-panel">
+      <div class="section-card">
+        <h3>常見錯誤情境</h3>
+        <table>
+          <tr><th>情境</th><th>說明</th></tr>
+          <tr><td class="param-name">驗證碼錯誤</td><td>回傳 <code>invalidCodeCount</code>、<code>invalidCodeCountExpiredTime</code>、<code>expiredAt</code></td></tr>
+        </table>
+        <p style="padding:12px 0 0;font-size:12px;color:#888">測試工具：後台「系統 &gt; 開發者工具」→「查詢註冊/登入驗證碼」可查詢驗證碼。</p>
+      </div>
+    </div>
+    <div id="av-ex" class="tab-panel">
+      <div class="section-card">
+        <h3>請求範例</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang">JSON Request</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre><span class="c">// POST /employer/register/confirm</span>
+{
+  <span class="k">"phone"</span>: <span class="s">"0910123456"</span>,
+  <span class="k">"password"</span>: <span class="s">"3858f62230ac3c915f300c664312c63f"</span>,
+  <span class="k">"notify_device_token"</span>: <span class="s">"FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660"</span>
+}</pre>
+        </div>
+      </div>
+      <div class="section-card" style="margin-top:16px">
+        <h3>回應範例（成功）</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang">JSON Response</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre>{
+  <span class="k">"accessToken"</span>: <span class="s">"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjF6aXlIVG15M184MDRDOU1j..."</span>,
+  <span class="k">"accessTokenExpiredAt"</span>: <span class="n">1686658173</span>,
+  <span class="k">"refreshToken"</span>: <span class="s">"1jUENHVERmYWJCNThBNEInR5cbXkgbmV3IGZpbGUgY29udGVudHMVG15..."</span>,
+  <span class="k">"refreshTokenExpiredAt"</span>: <span class="n">1689246597</span>
+}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- ══════════════ API: account-query ══════════════ -->
+  <div id="page-account-query" class="api-page content-wrap">
+    <div class="api-header">
+      <div class="breadcrumb">帳號建立 API <span>›</span> 商家登入</div>
+      <h1>商家登入</h1>
+      <div class="endpoint">
+        <span class="method" style="color:var(--tag-post)">POST</span>
+        <span class="url">/employer/login</span>
+      </div>
+      <div class="desc">以手機號碼申請登入 Worky 商家帳號。呼叫後系統將發送 OTP 驗證碼至指定手機，需接續呼叫「確認登入驗證碼」API 完成登入取得 Token。</div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'aq-res')">回應參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'aq-err')">錯誤碼</button>
+      <button class="tab-btn" onclick="switchTab(this,'aq-ex')">範例</button>
+    </div>
+    <div id="aq-res" class="tab-panel active">
+      <div class="notice">不需要帶 Access Token。此 API 與商家註冊 API 共用相同的 Body 格式，呼叫後發送登入驗證碼。</div>
+      <div class="section-card">
+        <h3>Body 參數</h3>
+        <table>
+          <tr><th>參數名稱</th><th>類型</th><th>必填</th><th>說明</th></tr>
+          <tr><td class="param-name">phone</td><td><span class="type-badge">string</span></td><td><span class="required">必填</span></td><td>登入用的手機號碼（不含國碼），例如 <code>0910123456</code></td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="aq-err" class="tab-panel">
+      <div class="section-card">
+        <h3>成功回應欄位</h3>
+        <table>
+          <tr><th>欄位名稱</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="param-name">codeTTL</td><td><span class="type-badge">int</span></td><td>驗證碼有效時間（秒）</td></tr>
+          <tr><td class="param-name">interval</td><td><span class="type-badge">int</span></td><td>驗證碼發送間隔時間（秒）</td></tr>
+          <tr><td class="param-name">code</td><td><span class="type-badge">string</span></td><td>驗證碼（<strong>僅測試環境回傳</strong>）</td></tr>
+        </table>
+      </div>
+      <div class="section-card" style="margin-top:16px">
+        <h3>常見錯誤情境</h3>
+        <table>
+          <tr><th>情境</th><th>說明</th></tr>
+          <tr><td class="param-name">驗證碼已產生</td><td>回傳 <code>time</code>（剩餘秒數）與 <code>expiredAt</code>（過期時間戳）</td></tr>
+          <tr><td class="param-name">輸入驗證碼錯誤 X 次</td><td>回傳 <code>invalidCodeCount</code>、<code>invalidCodeCountExpiredTime</code>、<code>expiredAt</code></td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="aq-ex" class="tab-panel">
+      <div class="section-card">
+        <h3>請求範例</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang">JSON Request</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre><span class="c">// POST /employer/login</span>
+{
+  <span class="k">"phone"</span>: <span class="s">"0910123456"</span>
+}</pre>
+        </div>
+      </div>
+      <div class="section-card" style="margin-top:16px">
+        <h3>回應範例（成功）</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang">JSON Response</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre>{
+  <span class="k">"codeTTL"</span>: <span class="n">300</span>,
+  <span class="k">"interval"</span>: <span class="n">60</span>
+}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- ══════════════ API: account-deactivate ══════════════ -->
+  <div id="page-account-deactivate" class="api-page content-wrap">
+    <div class="api-header">
+      <div class="breadcrumb">帳號建立 API <span>›</span> 確認登入驗證碼</div>
+      <h1>確認登入驗證碼</h1>
+      <div class="endpoint">
+        <span class="method" style="color:var(--tag-post)">POST</span>
+        <span class="url">/employer/login/confirm</span>
+      </div>
+      <div class="desc">提交登入驗證碼（MD5雜湊值）完成身分驗證。成功後回傳 Access Token 與 Refresh Token，即可使用需要認證的 API。</div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'ad-req')">請求參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'ad-err')">錯誤碼</button>
+      <button class="tab-btn" onclick="switchTab(this,'ad-ex')">範例</button>
+    </div>
+    <div id="ad-req" class="tab-panel active">
+      <div class="notice">不需要帶 Access Token。驗證碼須先以 MD5 雜湊後傳入 <code>password</code> 欄位。</div>
+      <div class="section-card">
+        <h3>Body 參數</h3>
+        <table>
+          <tr><th>參數名稱</th><th>類型</th><th>必填</th><th>說明</th></tr>
+          <tr><td class="param-name">phone</td><td><span class="type-badge">string</span></td><td><span class="required">必填</span></td><td>登入用的手機號碼（不含國碼），例如 <code>0910123456</code></td></tr>
+          <tr><td class="param-name">password</td><td><span class="type-badge">string(32)</span></td><td><span class="required">必填</span></td><td>驗證碼雜湊值（從手機簡訊獲取的驗證碼進行 MD5 後的雜湊值）</td></tr>
+          <tr><td class="param-name">notify_device_token</td><td><span class="type-badge">string</span></td><td><span class="optional">選填</span></td><td>用於 iOS / Android Notification 服務的 device token</td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="ad-err" class="tab-panel">
+      <div class="section-card">
+        <h3>成功回應欄位</h3>
+        <table>
+          <tr><th>欄位名稱</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="param-name">accessToken</td><td><span class="type-badge">string</span></td><td>身分驗證用 Access Token（有效期 1 小時）</td></tr>
+          <tr><td class="param-name">accessTokenExpiredAt</td><td><span class="type-badge">int</span></td><td>Access Token 失效時間戳</td></tr>
+          <tr><td class="param-name">refreshToken</td><td><span class="type-badge">string</span></td><td>Refresh Token（有效期 30 天）</td></tr>
+          <tr><td class="param-name">refreshTokenExpiredAt</td><td><span class="type-badge">int</span></td><td>Refresh Token 失效時間戳</td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="ad-ex" class="tab-panel">
+      <div class="section-card">
+        <h3>請求範例</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang">JSON Request</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre><span class="c">// POST /employer/login/confirm</span>
+{
+  <span class="k">"phone"</span>: <span class="s">"0910123456"</span>,
+  <span class="k">"password"</span>: <span class="s">"3858f62230ac3c915f300c664312c63f"</span>,
+  <span class="k">"notify_device_token"</span>: <span class="s">"FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660"</span>
+}</pre>
+        </div>
+      </div>
+      <div class="section-card" style="margin-top:16px">
+        <h3>回應範例（成功）</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang">JSON Response</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre>{
+  <span class="k">"accessToken"</span>: <span class="s">"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjF6aXlIVG15M18..."</span>,
+  <span class="k">"accessTokenExpiredAt"</span>: <span class="n">1686658173</span>,
+  <span class="k">"refreshToken"</span>: <span class="s">"1jUENHVERmYWJCNThBNEInR5cbXkgbmV3IGZpbGUgY29udGVudHMVG15..."</span>,
+  <span class="k">"refreshTokenExpiredAt"</span>: <span class="n">1689246597</span>
+}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- ══════════════ API: merchant-register ══════════════ -->
+  <div id="page-merchant-register" class="api-page content-wrap">
+    <div class="api-header">
+      <div class="breadcrumb">商家管理 API <span>›</span> 新增店鋪資料</div>
+      <h1>新增店鋪資料</h1>
+      <div class="endpoint">
+        <span class="method" style="color:var(--tag-post)">POST</span>
+        <span class="url">/employer/shop/create</span>
+      </div>
+      <div class="desc">新增商家的店鋪資料。商家帳號必須已完成登入驗證（具備有效 Access Token）才可呼叫此 API。</div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'mr-req')">請求參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'mr-res')">回應參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'mr-err')">錯誤碼</button>
+      <button class="tab-btn" onclick="switchTab(this,'mr-ex')">範例</button>
+    </div>
+    <div id="mr-req" class="tab-panel active">
+      <div class="notice">需帶入 Access Token（Bearer）於 Authorization Header。</div>
+      <div class="section-card">
+        <h3>Body 參數</h3>
+        <table>
+          <tr><th>參數名稱</th><th>類型</th><th>必填</th><th>說明</th></tr>
+          <tr><td class="param-name">name</td><td><span class="type-badge">string</span></td><td><span class="required">必填</span></td><td>商家名稱，例如 <code>老饕牛肉麵店</code></td></tr>
+          <tr><td class="param-name">branch_name</td><td><span class="type-badge">string</span></td><td><span class="optional">選填</span></td><td>分店名稱，例如 <code>老饕牛肉麵店(台北店)</code></td></tr>
+          <tr><td class="param-name">city</td><td><span class="type-badge">int</span></td><td><span class="required">必填</span></td><td>店鋪登記縣市 ID，例如 <code>1</code>（台北市）</td></tr>
+          <tr><td class="param-name">district</td><td><span class="type-badge">int</span></td><td><span class="required">必填</span></td><td>店鋪登記區域 ID，例如 <code>100</code>（中正區）</td></tr>
+          <tr><td class="param-name">address</td><td><span class="type-badge">string</span></td><td><span class="required">必填</span></td><td>店鋪登記地址，例如 <code>延平南路189號5樓</code></td></tr>
+          <tr><td class="param-name">job_type_level1</td><td><span class="type-badge">int</span></td><td><span class="required">必填</span></td><td>工作類型（level=1），例如 <code>1</code>（餐飲）</td></tr>
+          <tr><td class="param-name">email</td><td><span class="type-badge">string</span></td><td><span class="required">必填</span></td><td>電子信箱</td></tr>
+          <tr><td class="param-name">mobile_phone</td><td><span class="type-badge">string</span></td><td><span class="optional">選填</span></td><td>手機號碼</td></tr>
+          <tr><td class="param-name">company_logo</td><td><span class="type-badge">string</span></td><td><span class="required">必填</span></td><td>上傳圖片的網址（透過上傳檔案 API 取得）</td></tr>
+          <tr><td class="param-name">proxied_employer_id</td><td><span class="type-badge">int</span></td><td><span class="optional">選填</span></td><td>被代管的商家 ID，若無代管可不傳</td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="mr-res" class="tab-panel">
+      <div class="section-card">
+        <h3>成功回應欄位</h3>
+        <table>
+          <tr><th>欄位名稱</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="param-name">result</td><td><span class="type-badge">boolean</span></td><td>新增結果，<code>true</code> 表示成功</td></tr>
+          <tr><td class="param-name">shop_id</td><td><span class="type-badge">int</span></td><td>新建立的店鋪 ID</td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="mr-err" class="tab-panel">
+      <div class="section-card">
+        <h3>常見錯誤情境</h3>
+        <table>
+          <tr><th>情境</th><th>說明</th></tr>
+          <tr><td class="param-name">必填欄位缺漏</td><td>確認 name、city、district、address、job_type_level1、email、company_logo 均已填入</td></tr>
+          <tr><td class="param-name">Token 無效或過期</td><td>重新登入取得新的 Access Token</td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="mr-ex" class="tab-panel">
+      <div class="section-card">
+        <h3>請求範例</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang">JSON Request</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre><span class="c">// POST /employer/shop/create</span>
+{
+  <span class="k">"name"</span>: <span class="s">"老饕牛肉麵店"</span>,
+  <span class="k">"branch_name"</span>: <span class="s">"老饕牛肉麵店(台北店)"</span>,
+  <span class="k">"city"</span>: <span class="n">1</span>,
+  <span class="k">"district"</span>: <span class="n">100</span>,
+  <span class="k">"address"</span>: <span class="s">"延平南路189號5樓"</span>,
+  <span class="k">"job_type_level1"</span>: <span class="n">1</span>,
+  <span class="k">"email"</span>: <span class="s">"shop@example.com"</span>,
+  <span class="k">"company_logo"</span>: <span class="s">"https://res.worky.dev/upload/worky/labor-profile-images/image.png"</span>
+}</pre>
+        </div>
+      </div>
+      <div class="section-card" style="margin-top:16px">
+        <h3>回應範例（成功）</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang">JSON Response</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre>{
+  <span class="k">"result"</span>: <span class="k">true</span>,
+  <span class="k">"shop_id"</span>: <span class="n">100234</span>
+}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- ══════════════ API: recon-query ══════════════ -->
+  <div id="page-recon-query" class="api-page content-wrap">
+    <div class="api-header">
+      <div class="breadcrumb">對帳付款 API <span>›</span> 對帳查詢</div>
+      <h1>對帳查詢</h1>
+      <div class="endpoint">
+        <span class="method" style="color:var(--tag-get)">GET</span>
+        <span class="url">/v1/reconciliation</span>
+      </div>
+      <div class="desc">查詢指定日期區間的對帳明細，包含每筆交易金額、手續費及淨額，可依日期或訂單篩選。</div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'rq-req')">請求參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'rq-res')">回應參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'rq-err')">錯誤碼</button>
+      <button class="tab-btn" onclick="switchTab(this,'rq-ex')">範例</button>
+    </div>
+    <div id="rq-req" class="tab-panel active">
+      <div class="section-card">
+        <h3>Query 參數</h3>
+        <table>
+          <tr><th>參數名稱</th><th>類型</th><th>必填</th><th>說明</th></tr>
+          <tr><td class="param-name">date_from</td><td><span class="type-badge">string</span></td><td><span class="required">必填</span></td><td>查詢起始日期（格式：YYYY-MM-DD）</td></tr>
+          <tr><td class="param-name">date_to</td><td><span class="type-badge">string</span></td><td><span class="required">必填</span></td><td>查詢結束日期（最多 31 天區間）</td></tr>
+          <tr><td class="param-name">page</td><td><span class="type-badge">integer</span></td><td><span class="optional">選填</span></td><td>頁碼，預設 1</td></tr>
+          <tr><td class="param-name">per_page</td><td><span class="type-badge">integer</span></td><td><span class="optional">選填</span></td><td>每頁筆數，預設 50，最大 200</td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="rq-res" class="tab-panel">
+      <div class="section-card">
+        <h3>成功回應欄位</h3>
+        <table>
+          <tr><th>欄位名稱</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="param-name">data.total</td><td><span class="type-badge">integer</span></td><td>總筆數</td></tr>
+          <tr><td class="param-name">data.items[].date</td><td><span class="type-badge">string</span></td><td>交易日期</td></tr>
+          <tr><td class="param-name">data.items[].transaction_id</td><td><span class="type-badge">string</span></td><td>交易識別碼</td></tr>
+          <tr><td class="param-name">data.items[].order_id</td><td><span class="type-badge">string</span></td><td>商家訂單編號</td></tr>
+          <tr><td class="param-name">data.items[].gross_amount</td><td><span class="type-badge">integer</span></td><td>交易總額</td></tr>
+          <tr><td class="param-name">data.items[].fee</td><td><span class="type-badge">integer</span></td><td>平台手續費</td></tr>
+          <tr><td class="param-name">data.items[].net_amount</td><td><span class="type-badge">integer</span></td><td>實際撥款淨額</td></tr>
+          <tr><td class="param-name">data.items[].status</td><td><span class="type-badge">string</span></td><td>對帳狀態</td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="rq-err" class="tab-panel">
+      <div class="section-card">
+        <h3>錯誤碼列表</h3>
+        <table>
+          <tr><th>錯誤碼</th><th>HTTP 狀態</th><th>說明</th></tr>
+          <tr><td class="error-code">0000</td><td>200</td><td>成功</td></tr>
+          <tr><td class="error-code">1001</td><td>401</td><td>Token 無效</td></tr>
+          <tr><td class="error-code">7001</td><td>400</td><td>日期格式錯誤</td></tr>
+          <tr><td class="error-code">7002</td><td>400</td><td>日期區間超過 31 天</td></tr>
+          <tr><td class="error-code">5001</td><td>500</td><td>系統內部錯誤</td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="rq-ex" class="tab-panel">
+      <div class="section-card">
+        <h3>請求範例</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang">cURL</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre><span class="k">curl</span> -X GET \
+  <span class="s">"https://api.platform.com/v1/reconciliation?date_from=2024-06-01&date_to=2024-06-11&page=1&per_page=50"</span> \
+  -H <span class="s">"Authorization: Bearer eyJhbGciOiJSUzI1NiJ9..."</span></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- ══════════════ API: webhook-tx ══════════════ -->
+  <div id="page-webhook-tx" class="api-page content-wrap">
+    <div class="api-header">
+      <div class="breadcrumb">Webhook 通知 <span>›</span> 交易結果通知</div>
+      <h1>交易結果 Webhook 通知</h1>
+      <div class="endpoint">
+        <span class="method" style="color:var(--tag-post)">POST</span>
+        <span class="url">{your_notify_url}</span>
+      </div>
+      <div class="desc">當交易狀態發生變更時，平台將主動以 POST 方式推播通知至商家設定的 notify_url。商家需在 5 秒內回傳 HTTP 200 並包含 <code style="background:#e8f4f3;padding:2px 6px;border-radius:4px">{"code":"0000"}</code> 以確認收到。若未收到確認，平台將每隔 5 分鐘重試，最多重試 5 次。</div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'wt-params')">通知內容</button>
+      <button class="tab-btn" onclick="switchTab(this,'wt-verify')">簽章驗證</button>
+      <button class="tab-btn" onclick="switchTab(this,'wt-ex')">範例</button>
+    </div>
+    <div id="wt-params" class="tab-panel active">
+      <div class="notice">Webhook 為平台主動推播，非商家呼叫。商家需提供可對外接收 HTTPS POST 的端點。</div>
+      <div class="section-card">
+        <h3>通知推播欄位</h3>
+        <table>
+          <tr><th>欄位名稱</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="param-name">event_type</td><td><span class="type-badge">string</span></td><td>事件類型（TRANSACTION_SUCCESS / TRANSACTION_FAILED）</td></tr>
+          <tr><td class="param-name">transaction_id</td><td><span class="type-badge">string</span></td><td>平台交易識別碼</td></tr>
+          <tr><td class="param-name">order_id</td><td><span class="type-badge">string</span></td><td>商家訂單編號</td></tr>
+          <tr><td class="param-name">status</td><td><span class="type-badge">string</span></td><td>交易狀態</td></tr>
+          <tr><td class="param-name">amount</td><td><span class="type-badge">integer</span></td><td>交易金額</td></tr>
+          <tr><td class="param-name">timestamp</td><td><span class="type-badge">string</span></td><td>事件發生時間（ISO 8601）</td></tr>
+          <tr><td class="param-name">signature</td><td><span class="type-badge">string</span></td><td>HMAC-SHA256 簽章（供驗證使用）</td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="wt-verify" class="tab-panel">
+      <div class="section-card">
+        <h3>簽章驗證說明</h3>
+        <p style="padding:14px 18px;font-size:13px;line-height:1.8;color:#555">
+          為確保通知來源為本平台，商家應驗證 <code>signature</code> 欄位。<br><br>
+          簽章計算方式：<br>
+          1. 將 Body 中除 <code>signature</code> 以外的欄位，依 key 字母排序後串接為 <code>key=value&key=value...</code><br>
+          2. 使用商家的 <strong>Secret Key</strong>（由平台提供）以 HMAC-SHA256 計算雜湊<br>
+          3. 將計算結果（HEX 小寫）與收到的 <code>signature</code> 比對，一致即為有效
+        </p>
+        <div class="code-block" style="margin:0 18px 18px">
+          <div class="code-block-header"><span class="lang">Python 驗證範例</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre><span class="k">import</span> hmac, hashlib
+ 
+<span class="k">def</span> <span class="n">verify_webhook</span>(payload: dict, secret: str, received_sig: str) -> bool:
+    fields = {k: v <span class="k">for</span> k, v <span class="k">in</span> payload.items() <span class="k">if</span> k != <span class="s">"signature"</span>}
+    sorted_str = <span class="s">"&"</span>.join(f<span class="s">"{k}={v}"</span> <span class="k">for</span> k, v <span class="k">in</span> sorted(fields.items()))
+    computed = hmac.new(secret.encode(), sorted_str.encode(), hashlib.sha256).hexdigest()
+    <span class="k">return</span> hmac.compare_digest(computed, received_sig)</pre>
+        </div>
+      </div>
+    </div>
+    <div id="wt-ex" class="tab-panel">
+      <div class="section-card">
+        <h3>Webhook 推播範例</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang">JSON Payload</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre>{
+  <span class="k">"event_type"</span>: <span class="s">"TRANSACTION_SUCCESS"</span>,
+  <span class="k">"transaction_id"</span>: <span class="s">"TXN-20240611-X9P3"</span>,
+  <span class="k">"order_id"</span>: <span class="s">"ORD-20240611-00001"</span>,
+  <span class="k">"status"</span>: <span class="s">"SUCCESS"</span>,
+  <span class="k">"amount"</span>: <span class="n">1500</span>,
+  <span class="k">"timestamp"</span>: <span class="s">"2024-06-11T12:04:32+08:00"</span>,
+  <span class="k">"signature"</span>: <span class="s">"a3f9c2e1d84b76f50291a8ce37d64b20..."</span>
+}</pre>
+        </div>
+      </div>
+      <div class="section-card" style="margin-top:16px">
+        <h3>商家回應格式（需在 5 秒內回傳）</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang">JSON</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre>{ <span class="k">"code"</span>: <span class="s">"0000"</span> }</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- Placeholder pages for remaining APIs -->
+  <div id="page-checkout-confirm" class="api-page content-wrap">
+    <div class="api-header">
+      <div class="breadcrumb">結帳模組 <span>›</span> 確認結帳</div>
+      <h1>確認結帳</h1>
+      <div class="endpoint"><span class="method">POST</span><span class="url">/v1/checkout/confirm</span></div>
+      <div class="desc">商家後端接收 Webhook 或 Return URL 後，應主動呼叫此 API 最終確認交易，以完成訂單結帳程序。</div>
+    </div>
+    <div style="padding:20px;background:#fff;border-radius:10px;border:1px solid var(--border);color:var(--muted);font-size:14px">此 API 詳細說明內容建置中，請參考 <strong>建立結帳訂單</strong> API 了解整體流程。</div>
+  </div>
+  <div id="page-checkout-status" class="api-page content-wrap">
+    <div class="api-header">
+      <div class="breadcrumb">結帳模組 <span>›</span> 查詢結帳狀態</div>
+      <h1>查詢結帳狀態</h1>
+      <div class="endpoint"><span class="method" style="color:var(--tag-get)">GET</span><span class="url">/v1/checkout/{checkout_id}</span></div>
+      <div class="desc">查詢指定結帳識別碼的當前狀態，可用於前端輪詢確認付款進度。</div>
+    </div>
+    <div style="padding:20px;background:#fff;border-radius:10px;border:1px solid var(--border);color:var(--muted);font-size:14px">此 API 詳細說明內容建置中。</div>
+  </div>
+  <div id="page-tx-update" class="api-page content-wrap"><div class="api-header"><div class="breadcrumb">交易管理 API <span>›</span> 更新交易</div><h1>更新交易</h1><div class="endpoint"><span class="method" style="color:var(--tag-put)">PUT</span><span class="url">/v1/transaction/{transaction_id}</span></div><div class="desc">更新交易的備註、自訂欄位等可編輯資訊。</div></div><div style="padding:20px;background:#fff;border-radius:10px;border:1px solid var(--border);color:var(--muted);font-size:14px">此 API 詳細說明內容建置中。</div></div>
+  <div id="page-tx-confirm" class="api-page content-wrap"><div class="api-header"><div class="breadcrumb">交易管理 API <span>›</span> 確認交易</div><h1>確認交易</h1><div class="endpoint"><span class="method">POST</span><span class="url">/v1/transaction/{transaction_id}/confirm</span></div><div class="desc">對暫時授權的交易發出最終確認請求。</div></div><div style="padding:20px;background:#fff;border-radius:10px;border:1px solid var(--border);color:var(--muted);font-size:14px">此 API 詳細說明內容建置中。</div></div>
+  <div id="page-tx-cancel" class="api-page content-wrap"><div class="api-header"><div class="breadcrumb">交易管理 API <span>›</span> 取消交易</div><h1>取消交易</h1><div class="endpoint"><span class="method">POST</span><span class="url">/v1/transaction/{transaction_id}/cancel</span></div><div class="desc">對尚未完成的交易發出取消請求。</div></div><div style="padding:20px;background:#fff;border-radius:10px;border:1px solid var(--border);color:var(--muted);font-size:14px">此 API 詳細說明內容建置中。</div></div>
+  <!-- ══════════════ API: merchant-query ══════════════ -->
+  <div id="page-merchant-query" class="api-page content-wrap">
+    <div class="api-header">
+      <div class="breadcrumb">商家管理 API <span>›</span> 商家資訊查詢</div>
+      <h1>商家資訊查詢</h1>
+      <div class="endpoint">
+        <span class="method" style="color:var(--tag-get)">GET</span>
+        <span class="url">/employer/profile</span>
+      </div>
+      <div class="desc">查詢目前登入商家的基本資訊、帳號狀態、店鋪資料及各項計數。需帶入有效的 Access Token。</div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'mq-req')">請求參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'mq-res')">回應參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'mq-err')">錯誤碼</button>
+      <button class="tab-btn" onclick="switchTab(this,'mq-ex')">範例</button>
+    </div>
+    <div id="mq-req" class="tab-panel active">
+      <div class="notice">需帶入 Access Token（Bearer）於 Authorization Header。無需任何請求參數。</div>
+    </div>
+    <div id="mq-res" class="tab-panel">
+      <div class="section-card">
+        <h3>成功回應欄位</h3>
+        <table>
+          <tr><th>欄位名稱</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="param-name">id</td><td><span class="type-badge">int</span></td><td>使用者 ID</td></tr>
+          <tr><td class="param-name">username</td><td><span class="type-badge">string</span></td><td>用戶名，例如 <code>886912345678</code></td></tr>
+          <tr><td class="param-name">phone</td><td><span class="type-badge">string</span></td><td>電話號碼</td></tr>
+          <tr><td class="param-name">status</td><td><span class="type-badge">int</span></td><td>帳號狀態：0=已刪除、9=未啟用、10=已啟用、99=已封鎖</td></tr>
+          <tr><td class="param-name">shop_count</td><td><span class="type-badge">int</span></td><td>已創建店鋪數</td></tr>
+          <tr><td class="param-name">last_selected_shop_id</td><td><span class="type-badge">int</span></td><td>最後選擇的店鋪 ID</td></tr>
+          <tr><td class="param-name">is_enterprise_user</td><td><span class="type-badge">bool</span></td><td>是否為企業用戶</td></tr>
+          <tr><td class="param-name">total_shop_count</td><td><span class="type-badge">int</span></td><td>總管理店鋪數（含代管/託管）</td></tr>
+          <tr><td class="param-name">remaining_creatable_shop_count</td><td><span class="type-badge">int</span></td><td>剩餘可創建店鋪數</td></tr>
+          <tr><td class="param-name">pending_shop_proxy_invites_count</td><td><span class="type-badge">int</span></td><td>未回覆的店鋪代管邀請數量</td></tr>
+          <tr><td class="param-name">shop</td><td><span class="type-badge">object|void</span></td><td>當前管理的店鋪資料（無則不回傳）</td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="mq-err" class="tab-panel">
+      <div class="section-card">
+        <h3>常見錯誤情境</h3>
+        <table>
+          <tr><th>情境</th><th>說明</th></tr>
+          <tr><td class="param-name">Token 無效或過期</td><td>重新登入取得新的 Access Token</td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="mq-ex" class="tab-panel">
+      <div class="section-card">
+        <h3>請求範例</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang">cURL</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre><span class="k">curl</span> -X GET \
+  <span class="s">"https://api.worky.tw/employer/profile"</span> \
+  -H <span class="s">"Authorization: Bearer eyJhbGciOiJSUzI1NiJ9..."</span></pre>
+        </div>
+      </div>
+      <div class="section-card" style="margin-top:16px">
+        <h3>回應範例</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang">JSON Response</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre>{
+  <span class="k">"id"</span>: <span class="n">123</span>,
+  <span class="k">"username"</span>: <span class="s">"886912345678"</span>,
+  <span class="k">"phone"</span>: <span class="s">"0912345678"</span>,
+  <span class="k">"status"</span>: <span class="n">10</span>,
+  <span class="k">"shop_count"</span>: <span class="n">2</span>,
+  <span class="k">"is_enterprise_user"</span>: <span class="k">false</span>,
+  <span class="k">"total_shop_count"</span>: <span class="n">3</span>,
+  <span class="k">"shop"</span>: {
+    <span class="k">"shop_id"</span>: <span class="n">100234</span>,
+    <span class="k">"role_type"</span>: <span class="n">0</span>,
+    <span class="k">"role_type_text"</span>: <span class="s">"擁有者"</span>,
+    <span class="k">"name"</span>: <span class="s">"老饕牛肉麵店"</span>
+  }
+}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ══════════════ API: merchant-update ══════════════ -->
+  <div id="page-merchant-update" class="api-page content-wrap">
+    <div class="api-header">
+      <div class="breadcrumb">商家管理 API <span>›</span> 修改店鋪資料</div>
+      <h1>修改店鋪資料</h1>
+      <div class="endpoint">
+        <span class="method" style="color:var(--tag-post)">POST</span>
+        <span class="url">/employer/shop/update</span>
+      </div>
+      <div class="desc">更新商家的店鋪資料，包含名稱、地址、聯絡方式、Logo 等可修改欄位。需帶入有效的 Access Token。</div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'mu-req')">請求參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'mu-res')">回應參數</button>
+      <button class="tab-btn" onclick="switchTab(this,'mu-err')">錯誤碼</button>
+      <button class="tab-btn" onclick="switchTab(this,'mu-ex')">範例</button>
+    </div>
+    <div id="mu-req" class="tab-panel active">
+      <div class="notice">需帶入 Access Token（Bearer）於 Authorization Header。</div>
+      <div class="section-card">
+        <h3>Body 參數</h3>
+        <table>
+          <tr><th>參數名稱</th><th>類型</th><th>必填</th><th>說明</th></tr>
+          <tr><td class="param-name">shop_id</td><td><span class="type-badge">int</span></td><td><span class="required">必填</span></td><td>店鋪 ID，例如 <code>110123</code></td></tr>
+          <tr><td class="param-name">name</td><td><span class="type-badge">string</span></td><td><span class="required">必填</span></td><td>商家名稱</td></tr>
+          <tr><td class="param-name">branch_name</td><td><span class="type-badge">string</span></td><td><span class="optional">選填</span></td><td>分店名稱</td></tr>
+          <tr><td class="param-name">city</td><td><span class="type-badge">int</span></td><td><span class="required">必填</span></td><td>店鋪登記縣市 ID</td></tr>
+          <tr><td class="param-name">district</td><td><span class="type-badge">int</span></td><td><span class="required">必填</span></td><td>店鋪登記區域 ID</td></tr>
+          <tr><td class="param-name">address</td><td><span class="type-badge">string</span></td><td><span class="required">必填</span></td><td>店鋪登記地址</td></tr>
+          <tr><td class="param-name">job_type_level1</td><td><span class="type-badge">int</span></td><td><span class="required">必填</span></td><td>工作類型（level=1）</td></tr>
+          <tr><td class="param-name">email</td><td><span class="type-badge">string</span></td><td><span class="required">必填</span></td><td>電子信箱</td></tr>
+          <tr><td class="param-name">mobile_phone</td><td><span class="type-badge">string</span></td><td><span class="optional">選填</span></td><td>手機號碼</td></tr>
+          <tr><td class="param-name">local_phone_code</td><td><span class="type-badge">string</span></td><td><span class="optional">選填</span></td><td>市內電話區碼</td></tr>
+          <tr><td class="param-name">local_phone</td><td><span class="type-badge">string</span></td><td><span class="optional">選填</span></td><td>市內電話號碼</td></tr>
+          <tr><td class="param-name">url</td><td><span class="type-badge">string</span></td><td><span class="optional">選填</span></td><td>官網連結</td></tr>
+          <tr><td class="param-name">facebook_url</td><td><span class="type-badge">string</span></td><td><span class="optional">選填</span></td><td>Facebook 連結</td></tr>
+          <tr><td class="param-name">instagram_url</td><td><span class="type-badge">string</span></td><td><span class="optional">選填</span></td><td>Instagram 連結</td></tr>
+          <tr><td class="param-name">company_logo</td><td><span class="type-badge">string</span></td><td><span class="required">必填</span></td><td>上傳圖片的網址（透過上傳檔案 API 取得）</td></tr>
+          <tr><td class="param-name">store_type_tag</td><td><span class="type-badge">int</span></td><td><span class="optional">選填</span></td><td>店家類型標籤</td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="mu-res" class="tab-panel">
+      <div class="section-card">
+        <h3>成功回應欄位</h3>
+        <table>
+          <tr><th>欄位名稱</th><th>類型</th><th>說明</th></tr>
+          <tr><td class="param-name">result</td><td><span class="type-badge">boolean</span></td><td>資料更新結果，<code>true</code> 表示成功</td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="mu-err" class="tab-panel">
+      <div class="section-card">
+        <h3>常見錯誤情境</h3>
+        <table>
+          <tr><th>情境</th><th>說明</th></tr>
+          <tr><td class="param-name">必填欄位缺漏</td><td>確認 shop_id、name、city、district、address、job_type_level1、email、company_logo 均已填入</td></tr>
+          <tr><td class="param-name">Token 無效或過期</td><td>重新登入取得新的 Access Token</td></tr>
+          <tr><td class="param-name">shop_id 不存在或無權限</td><td>確認 shop_id 是否屬於目前登入商家</td></tr>
+        </table>
+      </div>
+    </div>
+    <div id="mu-ex" class="tab-panel">
+      <div class="section-card">
+        <h3>請求範例</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang">JSON Request</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre><span class="c">// POST /employer/shop/update</span>
+{
+  <span class="k">"shop_id"</span>: <span class="n">123</span>,
+  <span class="k">"name"</span>: <span class="s">"老饕牛肉麵店"</span>,
+  <span class="k">"city"</span>: <span class="n">1</span>,
+  <span class="k">"district"</span>: <span class="n">100</span>,
+  <span class="k">"address"</span>: <span class="s">"延平南路189號5樓"</span>,
+  <span class="k">"job_type_level1"</span>: <span class="n">1</span>,
+  <span class="k">"email"</span>: <span class="s">"shop@example.com"</span>,
+  <span class="k">"mobile_phone"</span>: <span class="s">"0912345678"</span>,
+  <span class="k">"company_logo"</span>: <span class="s">"https://res.worky.dev/upload/worky/labor-profile-images/image.png"</span>
+}</pre>
+        </div>
+      </div>
+      <div class="section-card" style="margin-top:16px">
+        <h3>回應範例（成功）</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span class="lang">JSON Response</span><button class="copy-btn" onclick="copyCode(this)">複製</button></div>
+          <pre>{
+  <span class="k">"result"</span>: <span class="k">true</span>
+}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="page-recon-payment" class="api-page content-wrap"><div class="api-header"><div class="breadcrumb">對帳付款 API <span>›</span> 撥款申請</div><h1>撥款申請</h1><div class="endpoint"><span class="method">POST</span><span class="url">/v1/reconciliation/payout</span></div><div class="desc">申請將累計交易淨額撥入商家指定銀行帳戶。</div></div><div style="padding:20px;background:#fff;border-radius:10px;border:1px solid var(--border);color:var(--muted);font-size:14px">此 API 詳細說明內容建置中。</div></div>
+  <div id="page-webhook-bind" class="api-page content-wrap"><div class="api-header"><div class="breadcrumb">Webhook 通知 <span>›</span> 綁定狀態通知</div><h1>綁定狀態 Webhook 通知</h1><div class="endpoint"><span class="method">POST</span><span class="url">{your_notify_url}</span></div><div class="desc">當消費者完成或拒絕帳號綁定時，平台推播通知至商家端點。</div></div><div style="padding:20px;background:#fff;border-radius:10px;border:1px solid var(--border);color:var(--muted);font-size:14px">此 API 詳細說明內容建置中。</div></div>
+  <div id="page-installment" class="api-page content-wrap"><div class="api-header"><div class="breadcrumb">其他 <span>›</span> 分期付款申請</div><h1>分期付款申請</h1><div class="endpoint"><span class="method">POST</span><span class="url">/v1/installment/apply</span></div><div class="desc">對已成功的交易申請分期付款方案。</div></div><div style="padding:20px;background:#fff;border-radius:10px;border:1px solid var(--border);color:var(--muted);font-size:14px">此 API 詳細說明內容建置中。</div></div>
+  <div id="page-health" class="api-page content-wrap"><div class="api-header"><div class="breadcrumb">其他 <span>›</span> 服務健康檢查</div><h1>服務健康檢查</h1><div class="endpoint"><span class="method" style="color:var(--tag-get)">GET</span><span class="url">/v1/health</span></div><div class="desc">確認 API 服務可用性，無需認證，可用於監控系統偵測。</div></div><div style="padding:20px;background:#fff;border-radius:10px;border:1px solid var(--border);color:var(--muted);font-size:14px">回應 <code>{"status":"ok"}</code> 表示服務正常。</div></div>
+ 
+  <!-- ── Changelog Page ── -->
+  <div id="page-changelog" class="changelog-page">
+    <div class="changelog-wrap">
+      <div class="changelog-header-card">
+        <div class="changelog-header-icon">📋</div>
+        <div>
+          <h1>更新日誌</h1>
+          <p>記錄 Worky API 的所有版本更新、功能新增、錯誤修復與重要變更。建議訂閱本頁以掌握最新整合資訊。</p>
+        </div>
+      </div>
+ 
+      <div class="changelog-timeline">
+ 
+        <!-- v1.4.0 -->
+        <div class="changelog-entry">
+          <div class="changelog-entry-meta">
+            <span class="version-badge">v1.4.0</span>
+            <span class="changelog-date">2025-05-20</span>
+            <span class="changelog-type-tag type-new">新增功能</span>
+          </div>
+          <h3>工作發佈模組全面升級</h3>
+          <p>本次版本新增多項工作發佈相關功能，提升商家管理工作的彈性。</p>
+          <ul>
+            <li>新增 <code style="background:#FFF8E1;padding:1px 5px;border-radius:3px;font-size:12px">GET /v1/job/list</code> 工作列表查詢 API，支援分頁、狀態篩選與日期區間</li>
+            <li>工作發佈 API 新增 <code style="background:#FFF8E1;padding:1px 5px;border-radius:3px;font-size:12px">custom_fields</code> 欄位，可傳入自訂標籤</li>
+            <li>新增工作關閉後的 Webhook 推播通知 <code style="background:#FFF8E1;padding:1px 5px;border-radius:3px;font-size:12px">JOB_CLOSED</code></li>
+            <li>查詢帳號狀態回應新增 <code style="background:#FFF8E1;padding:1px 5px;border-radius:3px;font-size:12px">last_active_at</code> 欄位</li>
+          </ul>
+        </div>
+ 
+        <!-- v1.3.2 -->
+        <div class="changelog-entry minor">
+          <div class="changelog-entry-meta">
+            <span class="version-badge minor">v1.3.2</span>
+            <span class="changelog-date">2025-04-08</span>
+            <span class="changelog-type-tag type-fix">錯誤修復</span>
+          </div>
+          <h3>帳號驗證與 Token 穩定性修復</h3>
+          <ul>
+            <li>修復 OTP 在特定電信商（台灣之星）無法正常接收的問題</li>
+            <li>修復 Access Token 在 UTC+8 時區跨日時提前失效的 Bug</li>
+            <li>修正 <code style="background:#FFF8E1;padding:1px 5px;border-radius:3px;font-size:12px">POST /v1/account/register</code> 在手機號碼含空白字元時回傳錯誤訊息不明確的問題</li>
+          </ul>
+        </div>
+ 
+        <!-- v1.3.0 -->
+        <div class="changelog-entry">
+          <div class="changelog-entry-meta">
+            <span class="version-badge">v1.3.0</span>
+            <span class="changelog-date">2025-03-01</span>
+            <span class="changelog-type-tag type-improve">功能改善</span>
+          </div>
+          <h3>Webhook 簽章驗證強化</h3>
+          <p>為提升推播安全性，Webhook 通知機制進行以下調整：</p>
+          <ul>
+            <li>所有 Webhook Payload 新增 <code style="background:#FFF8E1;padding:1px 5px;border-radius:3px;font-size:12px">signature</code> 欄位，採 HMAC-SHA256 簽章</li>
+            <li>推播重試機制調整：失敗後最多重試 5 次，間隔依指數退避（1s、2s、4s、8s、16s）</li>
+            <li>新增 Webhook 測試推播功能（可於商家後台手動觸發）</li>
+          </ul>
+        </div>
+ 
+        <!-- v1.2.1 -->
+        <div class="changelog-entry minor">
+          <div class="changelog-entry-meta">
+            <span class="version-badge minor">v1.2.1</span>
+            <span class="changelog-date">2025-01-15</span>
+            <span class="changelog-type-tag type-fix">錯誤修復</span>
+          </div>
+          <h3>商家管理 API 查詢修復</h3>
+          <ul>
+            <li>修復 <code style="background:#FFF8E1;padding:1px 5px;border-radius:3px;font-size:12px">GET /v1/merchant/{merchant_id}</code> 在部分商家資料不完整時回傳 500 的問題</li>
+            <li>修正回應中 <code style="background:#FFF8E1;padding:1px 5px;border-radius:3px;font-size:12px">bank_account</code> 末四碼遮罩邏輯錯誤</li>
+          </ul>
+        </div>
+ 
+        <!-- v1.2.0 -->
+        <div class="changelog-entry">
+          <div class="changelog-entry-meta">
+            <span class="version-badge">v1.2.0</span>
+            <span class="changelog-date">2024-11-20</span>
+            <span class="changelog-type-tag type-new">新增功能</span>
+          </div>
+          <h3>新增商家管理 API 模組</h3>
+          <p>支援第三方平台對商家資料進行完整的生命週期管理。</p>
+          <ul>
+            <li>新增 <code style="background:#FFF8E1;padding:1px 5px;border-radius:3px;font-size:12px">POST /v1/merchant/register</code> 商家註冊 API</li>
+            <li>新增 <code style="background:#FFF8E1;padding:1px 5px;border-radius:3px;font-size:12px">GET /v1/merchant/{merchant_id}</code> 查詢商家資料</li>
+            <li>新增 <code style="background:#FFF8E1;padding:1px 5px;border-radius:3px;font-size:12px">PUT /v1/merchant/{merchant_id}</code> 更新商家資料</li>
+            <li>Error Code 新增 <code style="background:#FFF8E1;padding:1px 5px;border-radius:3px;font-size:12px">4031</code>、<code style="background:#FFF8E1;padding:1px 5px;border-radius:3px;font-size:12px">4032</code> 商家相關錯誤碼</li>
+          </ul>
+        </div>
+ 
+        <!-- v1.0.0 -->
+        <div class="changelog-entry">
+          <div class="changelog-entry-meta">
+            <span class="version-badge">v1.0.0</span>
+            <span class="changelog-date">2024-09-01</span>
+            <span class="changelog-type-tag type-new">正式發佈</span>
+          </div>
+          <h3>Worky 第三方 API 正式上線</h3>
+          <p>首版 API 正式對外開放，提供完整的帳號建立與工作發佈整合能力。</p>
+          <ul>
+            <li>帳號建立 API 模組（建立、驗證 OTP、查詢狀態、停用）</li>
+            <li>工作發佈 API 模組（發佈、更新、關閉、查詢）</li>
+            <li>HMAC-SHA256 Webhook 推播機制</li>
+            <li>OAuth 2.0 Bearer Token 認證</li>
+            <li>Rate Limiting 機制（每分鐘 60 次）</li>
+          </ul>
+        </div>
+ 
+      </div>
+    </div>
+  </div>
+ 
+  <!-- ── Contact Page ── -->
+  <div id="page-contact" class="contact-page">
+    <div class="contact-wrap">
+      <div class="contact-header-card">
+        <div class="contact-header-icon">💬</div>
+        <div>
+          <h1>聯絡我們</h1>
+          <p>有任何技術問題、串接疑問或合作需求，歡迎透過以下管道與 Worky 技術支援團隊聯繫。</p>
+        </div>
+      </div>
+ 
+      <!-- Contact Cards -->
+      <div class="contact-grid">
+        <div class="contact-card">
+          <div class="contact-card-icon">📧</div>
+          <div>
+            <h4>技術支援信箱</h4>
+            <p>API 串接問題、錯誤回報、文件疑問</p>
+            <a href="mailto:api-support@worky.tw">api-support@worky.tw</a>
+          </div>
+        </div>
+        <div class="contact-card">
+          <div class="contact-card-icon">💼</div>
+          <div>
+            <h4>商務合作洽詢</h4>
+            <p>新合作夥伴申請、白標方案、企業方案</p>
+            <a href="mailto:partnership@worky.tw">partnership@worky.tw</a>
+          </div>
+        </div>
+        <div class="contact-card">
+          <div class="contact-card-icon">📞</div>
+          <div>
+            <h4>電話支援</h4>
+            <p>工作日 09:00–18:00（週一至週五）</p>
+            <span class="contact-val">02-2345-6789</span>
+          </div>
+        </div>
+        <div class="contact-card">
+          <div class="contact-card-icon">💬</div>
+          <div>
+            <h4>即時通訊</h4>
+            <p>已認證合作夥伴可加入專屬 LINE 群組</p>
+            <a href="#">申請加入群組 →</a>
+          </div>
+        </div>
+      </div>
+ 
+      <!-- SLA Table -->
+      <div class="contact-sla" style="margin-bottom:20px">
+        <h3>📊 服務支援等級說明（SLA）</h3>
+        <table class="sla-table">
+          <thead>
+            <tr>
+              <th>問題等級</th>
+              <th>說明</th>
+              <th>首次回應時間</th>
+              <th>目標解決時間</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="sla-badge sla-p1">P1 緊急</span></td>
+              <td>API 服務完全無法使用、影響所有商家</td>
+              <td>1 小時內</td>
+              <td>4 小時內</td>
+            </tr>
+            <tr>
+              <td><span class="sla-badge sla-p2">P2 高優先</span></td>
+              <td>部分功能異常、影響特定商家串接</td>
+              <td>4 小時內</td>
+              <td>1 個工作日</td>
+            </tr>
+            <tr>
+              <td><span class="sla-badge sla-p3">P3 一般</span></td>
+              <td>文件疑問、功能諮詢、非緊急錯誤回報</td>
+              <td>1 個工作日</td>
+              <td>3 個工作日</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+ 
+      <!-- FAQ -->
+      <div class="contact-faq">
+        <h3>❓ 常見問題</h3>
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            如何申請 API 測試環境（Sandbox）帳號？
+            <span class="faq-arrow"></span>
+          </div>
+          <div class="faq-a">
+            請來信至 <strong>api-support@worky.tw</strong>，信件主旨請標明「Sandbox 申請」，並附上公司名稱、負責人姓名及聯絡電話，我們將於 2 個工作日內完成審核並寄出帳號資訊。
+          </div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            Access Token 失效後如何重新取得？
+            <span class="faq-arrow"></span>
+          </div>
+          <div class="faq-a">
+            Access Token 有效期為 24 小時。到期後請重新呼叫 <code style="background:#FFF8E1;padding:1px 5px;border-radius:3px;font-size:12px">POST /v1/auth/token</code> 取得新 Token，建議在 Token 到期前 5 分鐘主動更新，以避免服務中斷。
+          </div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            Webhook 通知沒有收到，應如何排查？
+            <span class="faq-arrow"></span>
+          </div>
+          <div class="faq-a">
+            請依序確認：(1) Notify URL 是否可對外接受 POST 請求；(2) 伺服器是否在 5 秒內回傳 HTTP 200 及 <code style="background:#FFF8E1;padding:1px 5px;border-radius:3px;font-size:12px">{"code":"0000"}</code>；(3) 防火牆是否允許 Worky 伺服器 IP 範圍。如仍無法解決，請提供 transaction_id 至技術信箱，我們可協助查詢推播紀錄。
+          </div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            Rate Limit 上限是多少？可以提升嗎？
+            <span class="faq-arrow"></span>
+          </div>
+          <div class="faq-a">
+            預設 Rate Limit 為每分鐘 60 次請求（per IP）。如業務需求超過此限制，可聯繫商務合作信箱申請提升方案，企業合作夥伴最高可提升至每分鐘 600 次。
+          </div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            API 文件版本更新時，如何收到通知？
+            <span class="faq-arrow"></span>
+          </div>
+          <div class="faq-a">
+            目前可至本文件「更新日誌」頁面查看最新版本資訊。如需主動通知服務，請來信登記電子信箱，後續重大更版時將寄送 Email 通知。
+          </div>
+        </div>
+      </div>
+ 
+    </div>
+  </div>
+ 
+</main>
+</div>
+ 
+<footer>© 2024 Worky — 第三方平台 API Documentation — All rights reserved.</footer>
+ 
+<script>
+  // Show home
+  function showHome() {
+    hideAll();
+    document.getElementById('page-home').style.display = 'block';
+    document.querySelectorAll('.api-item').forEach(i => i.classList.remove('active'));
+  }
+ 
+  // Show changelog
+  function showChangelog() {
+    hideAll();
+    document.getElementById('page-changelog').classList.add('active');
+    document.querySelectorAll('.api-item').forEach(i => i.classList.remove('active'));
+  }
+ 
+  // Show contact
+  function showContact() {
+    hideAll();
+    document.getElementById('page-contact').classList.add('active');
+    document.querySelectorAll('.api-item').forEach(i => i.classList.remove('active'));
+  }
+ 
+  // Show API page
+  function showApi(id) {
+    hideAll();
+    const page = document.getElementById('page-' + id);
+    if (page) page.classList.add('active');
+    document.querySelectorAll('.api-item').forEach(i => i.classList.remove('active'));
+    document.querySelectorAll('.api-item').forEach(i => {
+      if (i.getAttribute('onclick') && i.getAttribute('onclick').includes(id)) {
+        i.classList.add('active');
+        // open parent module
+        const list = i.closest('.api-list');
+        if (list) {
+          list.classList.add('open');
+          const header = list.previousElementSibling;
+          if (header) header.classList.add('open');
+        }
+      }
+    });
+  }
+ 
+  function hideAll() {
+    document.getElementById('page-home').style.display = 'none';
+    document.querySelectorAll('.api-page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.changelog-page, .contact-page').forEach(p => p.classList.remove('active'));
+  }
+ 
+  // Toggle FAQ
+  function toggleFaq(el) {
+    const answer = el.nextElementSibling;
+    const isOpen = answer.classList.contains('open');
+    el.classList.toggle('open', !isOpen);
+    answer.classList.toggle('open', !isOpen);
+  }
+ 
+  // Toggle sidebar module
+  function toggleModule(header) {
+    const list = header.nextElementSibling;
+    const isOpen = list.classList.contains('open');
+    list.classList.toggle('open', !isOpen);
+    header.classList.toggle('open', !isOpen);
+  }
+ 
+  // Tab switching
+  function switchTab(btn, panelId) {
+    const tabGroup = btn.closest('.tabs');
+    tabGroup.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const page = btn.closest('.api-page, #page-home');
+    if (page) {
+      page.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      const panel = document.getElementById(panelId);
+      if (panel) panel.classList.add('active');
+    }
+  }
+ 
+  // Copy code
+  function copyCode(btn) {
+    const pre = btn.closest('.code-block').querySelector('pre');
+    navigator.clipboard.writeText(pre.innerText).then(() => {
+      btn.textContent = '✓ 已複製';
+      setTimeout(() => btn.textContent = '複製', 2000);
+    });
+  }
+ 
+  // Init
+  showHome();
+</script>
+</body>
+</html>
